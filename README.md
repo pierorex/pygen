@@ -1,5 +1,5 @@
 # **Pygen**
-## **A framework for Genetic Programming in Python**
+## **A Python Framework implementing the Genetic Algorithm**
 
 The main class, **GeneticOptimizer**, should be specialized by overriding some 
 methods:
