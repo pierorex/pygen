@@ -1,12 +1,12 @@
 #-*-encoding: utf-8 -*-
-if __name__ == '__main__' and __package__ is None:
+if __package__ is None:
     from os import sys, path
     sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
     from geneticoptimizer import GeneticOptimizer
 
 import csv
-from random import random, randint, shuffle
-from timeit import timeit
+import random
+from time import time
 
 # revisar
 # - darle penalizacion en el fitness a las soluciones que tengan muchos 1's (son muy generales)
@@ -40,48 +40,53 @@ class GabilOptimizer(GeneticOptimizer):
             [20, 50, 100, 300, 1000, 2000, 5000, 10000, 20000, 110000],
             ['+', '-']
         ]
-        self.continuous = {1,2,7,10,13,14}
-        self.discrete = {0,3,4,5,6,8,9,11,12,15}
+        self.continuous_indexes = {1,2,7,10,13,14}
+        self.discrete_indexes = {0,3,4,5,6,8,9,11,12,15}
 
-    #def discretize_example(self, example):
+    def discretize_example(self, example):
+        """
+        :param example: example given for classification
+        :return: example with all continuous fields discretized according to
+                 the mapping described in self.classes
+        """
+        for i in self.continuous_indexes:
+            for max_value in self.classes[i]:
+                if float(example[i]) < max_value:
+                    example[i] = max_value
+                    break
 
+        return example
+
+    def remove_na(self, example):
+        """
+        :param example: example given for classification
+        :return: curated example without NA's
+        """
+        for i in xrange(len(example)):
+            if example[i] == '?':
+                example[i] = random.choice(self.classes[i])
+
+        assert '?' not in example
+        return example
 
     def encode(self, decoded):
+        """
+        :param decoded: decoded example as a list of values or classes
+        :return: encoded example as a list of 1's and 0's
+        """
         encoded = []
 
         for i in xrange(len(self.classes)):
-            # print "Attr %d | Example says: %s" % (i,example[i])
-            try:  # continuous attributes
-                is_done = False
-
-                for max_value in self.classes[i]:
-                    if float(decoded[i]) < max_value and not is_done:
-                        encoded.append(1)
-                        is_done = True
-                    else:
-                        encoded.append(0)
-            except ValueError:  # discrete attributes
-                for class_k in self.classes[i]:
-                    is_done = False
-
-                    #print "%s %s" % (example[i], k)
-                    if decoded[i] == class_k:
-                        encoded.append(1)
-                        is_done = True
-                    else:
-                        encoded.append(0)
-
-                # Handle cases where NA appears (NA='?' in this dataset)
-                # We just assign attribute to the last class
-                if not is_done:
-                    encoded[len(encoded)-1] = 1
-            # print encoded
+            encoded += [1 if decoded[i] == class_k else 0 for class_k in self.classes[i]]
 
         assert len(encoded) == sum((len(i) for i in self.classes))
         return encoded
 
     def decode(self, encoded):
-        #print encoded
+        """
+        :param encoded: encoded example as a list of 1's and 0's
+        :return: decoded example as a list of values or classes
+        """
         decoded = []
         l = 0
 
@@ -90,6 +95,7 @@ class GabilOptimizer(GeneticOptimizer):
             class_index = slice_i.index(1)
             decoded.append(self.classes[i][(class_index)])
             l += len(self.classes[i])
+
         assert len(decoded) == len(self.classes)
         return decoded
 
@@ -144,20 +150,23 @@ class GabilOptimizer(GeneticOptimizer):
         for e in self.examples:
             for i in [1,2,7,10,13,14]:
                 try:
-                    mini[i], maxi[i] = min(mini[i], float(e[i])), max(maxi[i], float(e[i]))
+                    mini[i] = min(mini[i], float(e[i]))
+                    maxi[i] = max(maxi[i], float(e[i]))
                 except: pass
 
         return (mini, maxi)
 
-    def read_input(self, file_path):
+    def load_input(self, file_path):
         input_file = open(file_path, "r")
         csvreader = csv.reader(input_file)
         self.examples = [line for line in csvreader]
-        self.encoded_examples = [self.encode(example) for example in self.examples]
-        self.decoded_examples = [self.decode(example) for example in self.encoded_examples]
+        self.curated_examples = [self.remove_na(e) for e in self.examples]
+        self.discretized_examples = [self.discretize_example(e) 
+                                     for e in self.curated_examples]
+        self.encoded_examples = [self.encode(e) for e in self.curated_examples]
+        self.decoded_examples = [self.decode(e) for e in self.encoded_examples]
 
 
 if __name__ == '__main__':
     go = GabilOptimizer(3)
-    go.read_input("credit-screening/crx.data")
-    # print go.encoded_examples
+    go.load_input("credit-screening/crx.data")
