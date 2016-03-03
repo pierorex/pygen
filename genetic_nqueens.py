@@ -55,18 +55,5 @@ class NqueensOptimizer(GeneticOptimizer):
 
 
 if __name__ == '__main__':
-    repetitions = 0
-
-    while True:
-        repetitions += 1
-        start_time = time()
-        q = NqueensOptimizer(n=30).runGA(iterations=500,
-                                         pop_count=100,
-                                         target=0.0,
-                                         mutate_prob=0.1)
-        print q
-        print "Elapsed time: %f" % (time() - start_time)
-        if q[0] == 0.0:
-            print ("Took %d repetitions to get to the optimal " +
-                   "solution") % repetitions
-            break
+    no = NqueensOptimizer(30)
+    no.find_optimal(iterations=300, pop_count=100, target=0.0, mutate_prob=0.1)
