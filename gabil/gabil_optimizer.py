@@ -71,13 +71,13 @@ class GabilOptimizer(GeneticOptimizer):
                     else:
                         encoded.append(0)
 
-                # Handle case when NA appears (NA='?' in this dataset)
+                # Handle cases where NA appears (NA='?' in this dataset)
                 # We just assign attribute to the last class
                 if not is_done:
                     encoded[len(encoded)-1] = 1
             # print encoded
 
-        # assert len(encoded) == sum([len(i) for i in self.classes])
+        assert len(encoded) == sum((len(i) for i in self.classes))
         return encoded
 
     def decode(self, encoded):
@@ -90,7 +90,7 @@ class GabilOptimizer(GeneticOptimizer):
             class_index = slice_i.index(1)
             decoded.append(self.classes[i][(class_index)])
             l += len(self.classes[i])
-        #print decoded
+        assert len(decoded) == len(self.classes)
         return decoded
 
     def individual(self):
