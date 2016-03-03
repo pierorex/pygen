@@ -118,25 +118,30 @@ class GeneticOptimizer(object):
         return self.population_report() if debug else ranked[0]
 
     def find_optimal(self, **kwargs):
+        def process_lap(solution, best, start_time):
+            print "New solution:  " + str(solution)
+            print "Best solution: " + str(best)
+            print "Elapsed time: %f" % (time() - start_time)
+            print
+
         repetitions = 0
+        best = (float('-inf' if kwargs.get('reverse') else 'inf'), [])
+        compare = (lambda x, y: cmp(x,y) if kwargs.get('reverse') else -cmp(x,y))
 
         while True:
             start_time = time()
             repetitions += 1
-            s = self.runGA(**kwargs)
-            print s
-            print "Elapsed time: %f" % (time() - start_time)
+            solution = self.runGA(**kwargs)
 
-            if kwargs.get('reverse'):
-                if s[0] >= kwargs['target']:
-                    print ("Took %d repetitions to get to the optimal " +
-                           "solution") % repetitions
-                    return
-            else: 
-                if s[0] <= kwargs['target']:
-                    print ("Took %d repetitions to get to the optimal " +
-                           "solution") % repetitions
-                    return
+            if compare(solution, best) != -1:
+                best = solution
+            if compare(solution[0], kwargs['target']) != -1:
+                process_lap(solution, best, start_time)
+                print ("Took %d repetitions to get to the optimal " +
+                       "solution") % repetitions
+                return
+
+            process_lap(solution, best, start_time)
 
     def population_report(self):
         best = (100000000, [])
