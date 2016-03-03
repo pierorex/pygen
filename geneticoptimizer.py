@@ -115,16 +115,16 @@ class GeneticOptimizer(object):
         ranked = sorted([(self.fitness(x), x) for x in self.pop])
         return self.population_report() if debug else ranked[0]
 
-    def find_optimal(self, **args):
+    def find_optimal(self, **kwargs):
         repetitions = 0
 
         while True:
             start_time = time()
             repetitions += 1
-            s = self.runGA(**args)
+            s = self.runGA(**kwargs)
             print s
             print "Elapsed time: %f" % (time() - start_time)
-            if s[0] == 0.0:
+            if s[0] == kwargs['target']:
                 print ("Took %d repetitions to get to the optimal " +
                        "solution") % repetitions
                 return

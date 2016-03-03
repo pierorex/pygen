@@ -115,46 +115,6 @@ class GabilOptimizer(GeneticOptimizer):
         assert len(decoded) == len(self.classes)
         return decoded
 
-    def individual(self):
-        """
-        representation example:
-        [   
-            [1,1,1,1,0,0,0,0],
-            [0,0,0,0,1,0,1,0],
-            [0,0,1,1,1,0,0,1]
-        ]
-        meaning by row:
-            Feature1: arr[0:4]
-            Feature2: arr[4:7]
-            Class: arr[7]
-        meaning of full matrix:
-            Object with Feature1 in [1,2,3,4] => Class 0
-            Object with Feature2 in [1,3] => Class 0
-            Object with Feature1 in [3,4] and Feature2 in [1] => Class 1
-        """
-        l = range(self.count_rules)
-        return l
-
-    def fitness(self, solution): # porcentaje correctos al cuadrado
-        def count_correct(rules_list, examples_list):
-            return sum(1 for rule in rules_list 
-                         for example in encoded_examples
-                         if example == rule)
-            # correctos(hip, ejms):
-            # for e in ejms:
-            #   for regla in hip:
-            #       if match(regla, e):  # probar: si hace match pero la clase está errada => correctos--
-            #           correctos++ 
-            #           break
-
-        return count_correct(solution, self.encoded_examples)
-
-    def mutate(self, mutate_prob, parents):
-        pass
-
-    def mix(self, parent1, parent2):
-        pass
-
     def get_continuous_minmax(self):
         """
         Calculate min and max of columns with continuous values, this will help
@@ -183,8 +143,48 @@ class GabilOptimizer(GeneticOptimizer):
         self.decoded_examples = [self.decode(e) for e in self.encoded_examples]
         assert self.curated_examples == self.decoded_examples
 
+    def fitness(self, solution):
+            # correctos(hip, ejms):
+            # for e in ejms:
+            #   for regla in hip:
+            #       if match(regla, e):  # probar: si hace match pero la clase está errada => correctos--
+            #           correctos++ 
+            #           break
+
+        correct_count = sum(1 for rule in solution
+                              for example in self.encoded_examples
+                              if example == rule)
+        return -(float(correct_count) / len(self.encoded_examples)) ** 2
+
+    def individual(self):
+        """
+        representation example:
+        [   
+            [1,1,1,1,0,0,0,0],
+            [0,0,0,0,1,0,1,0],
+            [0,0,1,1,1,0,0,1]
+        ]
+        meaning by row:
+            Feature1: arr[0:4]
+            Feature2: arr[4:7]
+            Class: arr[7]
+        meaning of full matrix:
+            Object with Feature1 in [1,2,3,4] => Class 0
+            Object with Feature2 in [1,3] => Class 0
+            Object with Feature1 in [3,4] and Feature2 in [1] => Class 1
+
+        DocTests:
+        >>> len(GabilOptimizer(3).individual())
+        3
+        >>> len(GabilOptimizer(3).individual()[0])
+        77
+        """
+        return [[random.choice([0,1]) for _ in range(77)] for _ in range(self.count_rules)]
+
+    def mutate(self, mutate_prob, parents):
+        return parents
 
 if __name__ == '__main__':
     go = GabilOptimizer(3)
     go.load_input("credit-screening/crx.data")
-    # print go.encoded_examples
+    go.find_optimal(iterations=300, pop_count=10, target=-1000.0, mutate_prob=0.1)
