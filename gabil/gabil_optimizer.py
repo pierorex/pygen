@@ -144,6 +144,12 @@ class GabilOptimizer(GeneticOptimizer):
         assert self.curated_examples == self.decoded_examples
 
     def fitness(self, solution):
+        def match(example, rule):
+            for i in xrange(len(example)):
+                if example[i] == 1 and rule[i] == 0:
+                    return False
+            return True
+
             # correctos(hip, ejms):
             # for e in ejms:
             #   for regla in hip:
@@ -153,8 +159,16 @@ class GabilOptimizer(GeneticOptimizer):
 
         correct_count = sum(1 for rule in solution
                               for example in self.encoded_examples
-                              if example == rule)
-        return -(float(correct_count) / len(self.encoded_examples)) ** 2
+                              if match(example, rule))
+       
+        #for rule in solution:
+        #    for example in self.encoded_examples:
+        #        if match(example, rule):
+        #            count += 1
+        #            break
+        fit = (float(correct_count) / len(self.encoded_examples)) ** 2
+        #print fit
+        return fit
 
     def individual(self):
         """
@@ -179,12 +193,18 @@ class GabilOptimizer(GeneticOptimizer):
         >>> len(GabilOptimizer(3).individual()[0])
         77
         """
-        return [[random.choice([0,1]) for _ in range(77)] for _ in range(self.count_rules)]
+        return [[random.choice([0,1]) for _ in range(77)] 
+                for _ in range(self.count_rules)]
 
     def mutate(self, mutate_prob, parents):
-        return parents
+        for solution in parents:
+            #print solution
+            if mutate_prob > random.random():
+                rule = random.randint(0, len(solution)-1)
+                bit = random.randint(0, len(solution[rule])-1)
+                solution[rule][bit] = 0 if solution[rule][bit] == 1 else 1
 
 if __name__ == '__main__':
-    go = GabilOptimizer(3)
+    go = GabilOptimizer(20)
     go.load_input("credit-screening/crx.data")
-    go.find_optimal(iterations=300, pop_count=10, target=-1000.0, mutate_prob=0.1)
+    go.find_optimal(iterations=100, pop_count=40, target=1.0, mutate_prob=0.01, reverse=True)
