@@ -37,13 +37,16 @@ class GabilOptimizer(GeneticOptimizer):
             ['t', 'f'],
             ['g', 'p', 's'],
             [50, 100, 200, 500, 1000, 1300, 1600, 2100],
-            [5000, 15000, 40000, 60000, 80000, 110000],
+            [20, 50, 100, 300, 1000, 2000, 5000, 10000, 20000, 110000],
             ['+', '-']
         ]
         self.continuous = {1,2,7,10,13,14}
         self.discrete = {0,3,4,5,6,8,9,11,12,15}
 
-    def encode(self, example):
+    #def discretize_example(self, example):
+
+
+    def encode(self, decoded):
         encoded = []
 
         for i in xrange(len(self.classes)):
@@ -52,21 +55,42 @@ class GabilOptimizer(GeneticOptimizer):
                 is_done = False
 
                 for max_value in self.classes[i]:
-                    if float(example[i]) < max_value and not is_done:
+                    if float(decoded[i]) < max_value and not is_done:
                         encoded.append(1)
                         is_done = True
                     else:
                         encoded.append(0)
             except ValueError:  # discrete attributes
                 for class_k in self.classes[i]:
+                    is_done = False
+
                     #print "%s %s" % (example[i], k)
-                    encoded.append(1 if example[i] == class_k else 0)
+                    if decoded[i] == class_k:
+                        encoded.append(1)
+                        is_done = True
+                    else:
+                        encoded.append(0)
+
+                # Handle case when NA appears (NA='?' in this dataset)
+                # We just assign attribute to the last class
+                if not is_done:
+                    encoded[len(encoded)-1] = 1
             # print encoded
 
-        assert len(encoded) == sum([len(i) for i in self.classes])
+        # assert len(encoded) == sum([len(i) for i in self.classes])
         return encoded
 
-    def decode(self, bitstring):
+    def decode(self, encoded):
+        #print encoded
+        decoded = []
+        l = 0
+
+        for i in xrange(len(self.classes)):
+            slice_i = encoded[l : l + len(self.classes[i])]
+            class_index = slice_i.index(1)
+            decoded.append(self.classes[i][(class_index)])
+            l += len(self.classes[i])
+        #print decoded
         return decoded
 
     def individual(self):
@@ -130,6 +154,7 @@ class GabilOptimizer(GeneticOptimizer):
         csvreader = csv.reader(input_file)
         self.examples = [line for line in csvreader]
         self.encoded_examples = [self.encode(example) for example in self.examples]
+        self.decoded_examples = [self.decode(example) for example in self.encoded_examples]
 
 
 if __name__ == '__main__':
