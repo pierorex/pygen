@@ -48,6 +48,10 @@ class GabilOptimizer(GeneticOptimizer):
         :param example: example given for classification
         :return: example with all continuous fields discretized according to
                  the mapping described in self.classes
+
+        DocTests:
+        >>> GabilOptimizer(3).discretize_example(['b',56.75,12.25,'u','g','m','v',1.25,'t','t',04,'t','g',00200,0,'+'])
+        ['b', 70, 16, 'u', 'g', 'm', 'v', 8, 't', 't', 20, 't', 'g', 200, 20, '+']
         """
         for i in self.continuous_indexes:
             for max_value in self.classes[i]:
@@ -61,6 +65,10 @@ class GabilOptimizer(GeneticOptimizer):
         """
         :param example: example given for classification
         :return: curated example without NA's
+
+        DocTests:
+        >>> '?' in GabilOptimizer(3).remove_na(['b',34.83,4,'u','g','d','bb',12.5,'t','f',0,'t','g','?',0,'-'])
+        False
         """
         for i in xrange(len(example)):
             if example[i] == '?':
@@ -73,6 +81,10 @@ class GabilOptimizer(GeneticOptimizer):
         """
         :param decoded: decoded example as a list of values or classes
         :return: encoded example as a list of 1's and 0's
+        
+        DocTests:
+        >>> GabilOptimizer(3).encode(['b', 50, 8, 'u', 'g', 'c', 'h', 14, 'f', 'f', 20, 't', 'g', 50, 20, '-'])
+        [0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
         """
         encoded = []
 
@@ -86,6 +98,10 @@ class GabilOptimizer(GeneticOptimizer):
         """
         :param encoded: encoded example as a list of 1's and 0's
         :return: decoded example as a list of values or classes
+
+        DocTests:
+        >>> GabilOptimizer(3).decode([0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1])
+        ['b', 50, 8, 'u', 'g', 'c', 'h', 14, 'f', 'f', 20, 't', 'g', 50, 20, '-']
         """
         decoded = []
         l = 0
@@ -165,8 +181,10 @@ class GabilOptimizer(GeneticOptimizer):
                                      for e in self.curated_examples]
         self.encoded_examples = [self.encode(e) for e in self.curated_examples]
         self.decoded_examples = [self.decode(e) for e in self.encoded_examples]
+        assert self.curated_examples == self.decoded_examples
 
 
 if __name__ == '__main__':
     go = GabilOptimizer(3)
     go.load_input("credit-screening/crx.data")
+    # print go.encoded_examples
