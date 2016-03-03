@@ -56,6 +56,7 @@ class NqueensOptimizer(GeneticOptimizer):
 
 if __name__ == '__main__':
     repetitions = 0
+
     while True:
         repetitions += 1
         start_time = time()
