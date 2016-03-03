@@ -91,13 +91,14 @@ class GeneticOptimizer(object):
         return parents
 
     def runGA(self, iterations, pop_count, target, debug=False, retain=0.2,
-              diversity_prob=0.05, mutate_prob=0.01):
+              diversity_prob=0.05, mutate_prob=0.01, reverse=False):
         self.pop = self.population(pop_count)
         # if debug:
         #     self.fitness_history = [(self.rank(self.pop), self.pop)]
 
         for i in xrange(iterations):
-            ranked = sorted([(self.fitness(x), x) for x in self.pop])
+            ranked = sorted([(self.fitness(x), x) for x in self.pop],
+                reverse=reverse)
             ranks = [x[0] for x in ranked]
             solutions = [x[1] for x in ranked]
 
@@ -112,7 +113,8 @@ class GeneticOptimizer(object):
             #     self.fitness_history.append((self.rank(self.pop), self.pop))
 
         # we missed the target, let's analyze how we scored
-        ranked = sorted([(self.fitness(x), x) for x in self.pop])
+        ranked = sorted([(self.fitness(x), x) for x in self.pop], 
+            reverse=reverse)
         return self.population_report() if debug else ranked[0]
 
     def find_optimal(self, **kwargs):
