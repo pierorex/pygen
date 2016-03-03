@@ -1,3 +1,4 @@
+#-*-encoding: utf-8 -*-
 if __name__ == '__main__' and __package__ is None:
     from os import sys, path
     sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
@@ -8,8 +9,8 @@ from random import random, randint, shuffle
 from timeit import timeit
 
 # revisar
-# - darle penalización en el fitness a las soluciones que tengan muchos 1's (son muy generales)
-# - penalizar largo del arreglo (cantidad de reglas; favorecer conjuntos de reglas mas pequeños de reglas)
+# - darle penalizacion en el fitness a las soluciones que tengan muchos 1's (son muy generales)
+# - penalizar largo del arreglo (cantidad de reglas; favorecer conjuntos de reglas mas pequenos de reglas)
 # - una solución no debe tener c1&c2 => p y c1&c2 => -p como reglas
 
 
@@ -22,24 +23,51 @@ class GabilOptimizer(GeneticOptimizer):
         self.examples = []
         self.encoded_examples = []
         self.classes = [
-            {'a':0, 'b':1},
-            {},
-            {},
-            {'u':0, 'y':1, 'l':2, 't':3},
-            {'g':0, 'p':1, 'gg':2},
-            {'c':0, 'd':1, 'cc':2, 'i':3, 'j':4, 'k':5, 'm':6, 'r':7,
-             'q':8, 'w':9, 'x':10, 'e':11, 'aa':12, 'ff':13},
-            {'v':0, 'h':1, 'bb':2, 'j':3, 'n':4, 'z':5, 'dd':6, 'ff':7, 'o':8},
-            {},
-            {'t':0, 'f':1},
-            {'t':0, 'f':1},
-            {},
-            {'t':0, 'f':1},
-            {'g':0, 'p':1, 's':2},
-            {},
-            {},
-            {'+':0, '-':1}
+            ['a', 'b'],
+            [25, 50, 70, 81], # x<=25 -> 0 | 25<x<=50 -> 1 | ...
+            [8, 16, 24, 30],
+            ['u', 'y', 'l', 't'],
+            ['g', 'p', 'gg'],
+            ['c','d','cc','i','j','k','m','r','q','w','x','e','aa','ff'],
+            ['v', 'h', 'bb', 'j', 'n', 'z', 'dd', 'ff', 'o'],
+            [8, 14, 23, 30],
+            ['t', 'f'],
+            ['t', 'f'],
+            [20, 40, 55, 70],
+            ['t', 'f'],
+            ['g', 'p', 's'],
+            [50, 100, 200, 500, 1000, 1300, 1600, 2100],
+            [5000, 15000, 40000, 60000, 80000, 110000],
+            ['+', '-']
         ]
+        self.continuous = {1,2,7,10,13,14}
+        self.discrete = {0,3,4,5,6,8,9,11,12,15}
+
+    def encode(self, example):
+        encoded = []
+
+        for i in xrange(len(self.classes)):
+            # print "Attr %d | Example says: %s" % (i,example[i])
+            try:  # continuous attributes
+                is_done = False
+
+                for max_value in self.classes[i]:
+                    if float(example[i]) < max_value and not is_done:
+                        encoded.append(1)
+                        is_done = True
+                    else:
+                        encoded.append(0)
+            except ValueError:  # discrete attributes
+                for class_k in self.classes[i]:
+                    #print "%s %s" % (example[i], k)
+                    encoded.append(1 if example[i] == class_k else 0)
+            # print encoded
+
+        assert len(encoded) == sum([len(i) for i in self.classes])
+        return encoded
+
+    def decode(self, bitstring):
+        return decoded
 
     def individual(self):
         """
@@ -60,13 +88,6 @@ class GabilOptimizer(GeneticOptimizer):
         """
         l = range(self.count_rules)
         return l
-
-    def encode(self, example):
-
-        return 
-
-    def decode(self, bitstring):
-        return boolean_rules
 
     def fitness(self, solution): # porcentaje correctos al cuadrado
         def count_correct(rules_list, examples_list):
@@ -113,8 +134,5 @@ class GabilOptimizer(GeneticOptimizer):
 
 if __name__ == '__main__':
     go = GabilOptimizer(3)
-    go.read_input("gabil/credit-screening/crx.data")
-    mini, maxi = go.get_continuous_minmax()
-    print mini
-    print maxi
+    go.read_input("credit-screening/crx.data")
     # print go.encoded_examples
