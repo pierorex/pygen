@@ -146,43 +146,6 @@ class GabilOptimizer(GeneticOptimizer):
                              for e in self.test_dataset]
         self.encoded_test = [self.encode(e) for e in self.test_dataset]
         #self.decoded_examples = [self.decode(e) for e in self.encoded_examples]
-        #assert self.examples == self.decoded_examples
-
-    @staticmethod
-    def precision(classifier, dataset):
-        for e in dataset:
-            print GabilOptimizer.classify(e, classifier)
-
-    @staticmethod
-    def classify(classifier, example):
-        for rule in classifier:
-            if GabilOptimizer.matches(example, rule):
-                return rule[len(rule)-2:]
-
-    @staticmethod
-    def matches(example, rule):
-        for i in xrange(len(example)-2):
-            if example[i] == 1 and rule[i] == 0:
-                return False
-        return True
-
-    @staticmethod
-    def count_correct(examples, solution):
-        return sum(1 for rule in solution
-                     for example in examples
-                     if GabilOptimizer.matches(example, rule) and
-                     example[len(example)-1] == rule[len(rule)-1])
-
-    def fitness(self, solution):
-        # correctos(hip, ejms):
-        # for e in ejms:
-        #   for regla in hip:
-        #       if match(regla, e):  # probar: si hace match pero la clase
-        #           correctos++      #          está errada => correctos--
-        #           break
-
-        fit = (float(GabilOptimizer.count_correct(self.train_dataset, solution)) / len(self.encoded_train)) ** 2
-        return fit
 
     @staticmethod
     def new_rule():
@@ -231,11 +194,11 @@ class GabilOptimizer(GeneticOptimizer):
                 rule = random.randint(0, len(solution)-1)
                 bit = random.randint(0, len(solution[rule])-1)
                 solution[rule][bit] = 0 if solution[rule][bit] == 1 else 1
-            if mutate_prob > random.random():
-                solution.append(self.new_rule())
-            if mutate_prob > random.random():
-                if len(solution) > 1:
-                    solution.pop(random.randint(0, len(solution)-1))
+            #if mutate_prob > random.random():
+            #    solution.append(self.new_rule())
+            #if mutate_prob > random.random():
+            #    if len(solution) > 1:
+            #        solution.pop(random.randint(0, len(solution)-1))
 
     def flatten(self, l):
         """
@@ -290,8 +253,6 @@ class GabilOptimizer(GeneticOptimizer):
                 acc += len(self.classes[i])
 
             pos -= self.rule_length
-            if pos < 0: return None
-
 
     def mix(self, parent1, parent2):
         def position(i, attribute, offset):
@@ -329,20 +290,62 @@ class GabilOptimizer(GeneticOptimizer):
         child = self.build(child, self.rule_length)
         return child
 
+    @staticmethod
+    def matches(example, rule):
+        for i in xrange(len(example)-2):
+            if example[i] == 1 and rule[i] == 0:
+                return False
+        return True
+
+    @staticmethod
+    def count_correct(examples, solution):
+        count = 0
+
+        for example in examples:
+            for rule in solution:
+                if GabilOptimizer.matches(example, rule):
+                    if example[len(example)-1] == rule[len(rule)-1]:
+                        count += 1
+                        break
+                    else:
+                        count -= 1
+        return count
+
+    def fitness(self, solution):
+        fit = (GabilOptimizer.count_correct(self.train_dataset, solution) /
+              len(self.encoded_train)) ** 2
+        return fit
+
+    @staticmethod
+    def precision(classifier, dataset):
+        count = 0
+        print len(dataset), len(dataset[0])
+        for example in dataset:
+            print example
+            if example[len(example)-2:] == GabilOptimizer.classify(classifier, example):
+                count += 1
+        return float(count) / len(dataset)
+
+    @staticmethod
+    def classify(classifier, example):
+        for rule in classifier:
+            if GabilOptimizer.matches(example, rule):
+                return rule[len(rule)-2:]
+
 
 if __name__ == '__main__':
-    go = GabilOptimizer(10)
-    go.load_input("credit-screening/crx.data", training_percent=0.15)
+    go = GabilOptimizer(5)
+    go.load_input("credit-screening/crx.data", training_percent=0.85)
     best = (float('-inf'), [])
-    #solution = go.runGA(best=best, iterations=100, pop_count=10, target=10000.0,
-    #                    mutate_prob=0.1, reverse=True)
-    go.find_optimal(iterations=100, pop_count=10, target=10000.0,
-                    mutate_prob=0.1, reverse=True)
-    print solution[1]
+    solution = go.runGA(best=best, iterations=200, pop_count=10, target=10000.0,
+                        mutate_prob=0.01, reverse=True)
+    #go.find_optimal(iterations=100, pop_count=10, target=10000.0,
+    #                mutate_prob=0.1, reverse=True)
+    #print solution[1]
     print solution[0]
     print len(solution[1])
 
+    print GabilOptimizer.precision(solution[1], go.encoded_test)
 
-
-
-# 0.158842680109 : 100, 30, 40, 1.0, 0.1 just moving rules, not bits. 1.8hrs
+# TODO: flatten all rulesets from the beggining and use iterators to 
+# yield lists of 77 characters every time
