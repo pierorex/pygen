@@ -220,7 +220,7 @@ class GabilOptimizer(GeneticOptimizer):
         """
         builded = []
         i = 0
-        #print len(l)
+        #print "BUILD: %d" % len(l)
 
         while i < len(l):
             #print i
@@ -255,13 +255,13 @@ class GabilOptimizer(GeneticOptimizer):
             pos -= self.rule_length
 
     def mix(self, parent1, parent2):
-        def position(i, attribute, offset):
-            return i * self.rule_length +\
-                   sum(len(c) for c in self.classes[:attribute-1]) +\
-                   offset
+        def position(i, offset):
+            return i * self.rule_length + offset
 
         flat1 = self.flatten(parent1)
         flat2 = self.flatten(parent2)
+        #print "start"
+        #print len(flat1), len(flat2)
 
         # calculate swap points for parent1
         pos1 = random.randint(0, len(parent1)-1)
@@ -270,24 +270,27 @@ class GabilOptimizer(GeneticOptimizer):
         if pos1 > pos2:
             pos1, pos2 = pos2, pos1
 
-        location1 = self.locate(pos1)
-        location2 = self.locate(pos2)
+        location1 = pos1 % self.rule_length
+        location2 = pos2 % self.rule_length
 
         # calculate swap points for parent2 (based on parent1's locations)
         count_classes = len(parent2) / self.rule_length
         class1 = random.randint(0, count_classes)
         class2 = random.randint(0, count_classes)
 
-        pos3 = position(class1, **location1)
-        pos4 = position(class2, **location2)
+        pos3 = position(class1, location1)
+        pos4 = position(class2, location2)
 
         if pos3 > pos4:
             pos3, pos4 = pos3, pos4
 
         # create the child by swapping gene segments from parent1
         child = list(flat1)
-        child[pos1:pos2] = flat2[pos3:pos4]
+        #print len(child)
+        child[pos1:pos2+1] = flat2[pos3:pos4+1]
+        print len(flat1), len(flat2), len(child)
         child = self.build(child, self.rule_length)
+        #raw_input()
         return child
 
     @staticmethod
@@ -334,7 +337,7 @@ class GabilOptimizer(GeneticOptimizer):
 
 
 if __name__ == '__main__':
-    go = GabilOptimizer(5)
+    go = GabilOptimizer(10)
     go.load_input("credit-screening/crx.data", training_percent=0.85)
     best = (float('-inf'), [])
     solution = go.runGA(best=best, iterations=200, pop_count=10, target=10000.0,
