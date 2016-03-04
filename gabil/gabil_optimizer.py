@@ -34,6 +34,7 @@ class GabilOptimizer(GeneticOptimizer):
             [20, 50, 100, 300, 1000, 2000, 5000, 10000, 20000, 110000],
             ['+', '-']
         ]
+        self.rule_length = sum(len(c) for c in self.classes)
         self.continuous_indexes = {1,2,7,10,13,14}
         self.discrete_indexes = {0,3,4,5,6,8,9,11,12,15}
 
@@ -219,10 +220,6 @@ class GabilOptimizer(GeneticOptimizer):
             Object with Feature1 in [3,4] and Feature2 in [1] => Class 1
 
         DocTests:
-        >>> len(GabilOptimizer(3).individual())
-        3
-        >>> len(GabilOptimizer(3).individual()[0])
-        77
         """
         #return [self.new_rule() for _ in xrange(random.randint(3, self.count_rules))]
         return [random.choice(self.encoded_train) 
@@ -269,33 +266,67 @@ class GabilOptimizer(GeneticOptimizer):
 
         return builded
 
-    def mix(self, parent1, parent2):
-        #print "PARENT1 %d %d" % (len(parent1), len(parent1[0]))
-        #print parent1
-        flat1 = self.flatten(parent1)
-        #print "FLAT1 %d" % (len(flat1))
-        #print flat1
-        #print "PARENT2 %d %d" % (len(parent2), len(parent2[0]))
-        #print parent2
-        flat2 = self.flatten(parent2)
-        #print "FLAT2 %d" % (len(flat2))
-        #print flat2
-        # select p1 and p2 from the smallest parent
-        #point1 = random.randint(0, len(parent1)-1)
-        #point2 = random.randint(0, len(parent1)-1)
-        # select p3 
-        point1 = random.randint(0, len(parent2))
-        point2 = random.randint(0, len(parent2))
+    def locate(self, pos):
+        """
+        >>> GabilOptimizer(3).locate(3, 77)
+        {'attribute': 1, 'offset': 1}
+        >>> GabilOptimizer(3).locate(77, 77)
+        {'attribute': 0, 'offset': 0}
+        >>> GabilOptimizer(3).locate(155, 77)
+        {'attribute': 0, 'offset': 1}
+        >>> GabilOptimizer(3).locate(144, 77)
+        {'attribute': 14, 'offset': 2}
+        >>> GabilOptimizer(3).locate(77*8+1, 77)
+        {'attribute': 0, 'offset': 1}
+        >>> GabilOptimizer(3).locate(77*100+24, 77)
+        {'attribute': 5, 'offset': 7}
+        """
+        while True:
+            acc = 0
 
-        #if point1 > point2:
-        #    point1, point2 = point2, point1
-        if point1 > point2:
-            point1, point2 = point2, point1
-        child = flat1
-        child[point1:point2] = flat2[point1:point2]
-        child = self.build(child, 77)
-        #print "CHILD %d %d" % (len(child), len(child[0]))
-        #print child
+            for i in xrange(len(self.classes)):
+                if acc + len(self.classes[i]) > pos:
+                    return {'attribute': i, 'offset': pos - acc}
+                acc += len(self.classes[i])
+
+            pos -= self.rule_length
+            if pos < 0: return None
+
+
+    def mix(self, parent1, parent2):
+        def position(i, attribute, offset):
+            return i * self.rule_length +\
+                   sum(len(c) for c in self.classes[:attribute-1]) +\
+                   offset
+
+        flat1 = self.flatten(parent1)
+        flat2 = self.flatten(parent2)
+
+        # calculate swap points for parent1
+        pos1 = random.randint(0, len(parent1)-1)
+        pos2 = random.randint(0, len(parent1)-1)
+
+        if pos1 > pos2:
+            pos1, pos2 = pos2, pos1
+
+        location1 = self.locate(pos1)
+        location2 = self.locate(pos2)
+
+        # calculate swap points for parent2 (based on parent1's locations)
+        count_classes = len(parent2) / self.rule_length
+        class1 = random.randint(0, count_classes)
+        class2 = random.randint(0, count_classes)
+
+        pos3 = position(class1, **location1)
+        pos4 = position(class2, **location2)
+
+        if pos3 > pos4:
+            pos3, pos4 = pos3, pos4
+
+        # create the child by swapping gene segments from parent1
+        child = list(flat1)
+        child[pos1:pos2] = flat2[pos3:pos4]
+        child = self.build(child, self.rule_length)
         return child
 
 
