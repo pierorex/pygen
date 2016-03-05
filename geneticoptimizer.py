@@ -131,6 +131,7 @@ class GeneticOptimizer(object):
     def find_optimal(self, **kwargs):
         def process_lap(solution, best, start_time):
             print "Best solution: " + str(best[1])
+            print "len(Best solution): %d " % len(best[1])
             print "New solution value:  " + str(solution[0])
             print "Best solution value: " + str(best[0])
             print "Elapsed time: %f" % (time() - start_time)
