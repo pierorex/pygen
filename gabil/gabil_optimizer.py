@@ -134,6 +134,7 @@ class GabilOptimizer(GeneticOptimizer):
         input_file = open(file_path, "r")
         csvreader = csv.reader(input_file)
         self.examples = [line for line in csvreader]
+        random.shuffle(self.examples)
         train_len = int(training_percent * len(self.examples))
         # training dataset
         self.train_dataset = list([line for line in self.examples[:train_len]])
@@ -298,16 +299,10 @@ class GabilOptimizer(GeneticOptimizer):
                         if example[len(example)-1] == rule[len(rule)-1]:
                             count += 1
                             break
-                        #else:
-                        #    count -= 1
             return count
 
-        c = count_correct(self.encoded_train, solution)
-        #print c
-        fit = ( c /
-                float(len(self.encoded_train))) ** 2
-        #print fit
-        #print "exit fit"
+        fit = (count_correct(self.encoded_train, solution) /
+                float(len(self.encoded_train))) ** 2 - (0 if len(solution) < 20 else len(solution))
         return fit
 
     @staticmethod
@@ -318,6 +313,7 @@ class GabilOptimizer(GeneticOptimizer):
             #print example
             if example[len(example)-2:] == GabilOptimizer.classify(classifier, example):
                 count += 1
+        print count
         return float(count) / len(dataset)
 
     @staticmethod
@@ -328,19 +324,35 @@ class GabilOptimizer(GeneticOptimizer):
 
 
 if __name__ == '__main__':
-    go = GabilOptimizer(10)
-    go.load_input("credit-screening/crx.data", training_percent=0.85)
-    best = (float('-inf'), [])
-    #solution = go.runGA(best=best, iterations=20, pop_count=10, target=10000.0,
-    #                    mutate_prob=0.01, reverse=True)
-    go.find_optimal(iterations=200, pop_count=10, target=10000.0,
-                    mutate_prob=0.01, reverse=True)
-    print solution[1]
-    print "fitness = %d" % solution[0]
-    print "len = %d" % len(solution[1])
+    import cPickle
+    import argparse
 
-    #print GabilOptimizer.precision(solution[1], go.encoded_test)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--file', action='store', dest='file',
+                        required=True, help='File to save/read the produced classifier')
+    parser.add_argument('--action', action='store', dest='action',
+                        required=True, help="'train' or 'test'")
+    argv = parser.parse_args()
+
+    if  argv.action == 'train':
+        go = GabilOptimizer(15)
+        go.load_input("credit-screening/crx.data", training_percent=0.85)
+        solution = go.runGA(iterations=400, pop_count=30, target=10000.0,
+                            mutate_prob=0.1, reverse=True)
+        classifier = solution[1]
+        output_file = open(argv.file, 'w')
+        cPickle.dump(classifier, output_file)
+        #go.find_optimal(iterations=400, pop_count=20, target=10000.0,
+        #                mutate_prob=0.1, reverse=True)
+        #print solution[1]
+        print "fitness = %d" % solution[0]
+        print "len = %d" % len(solution[1])
+    elif argv.action == 'test':
+        go = GabilOptimizer(15)
+        go.load_input("credit-screening/crx.data", training_percent=0.85)
+        input_file = open(argv.file, 'r')
+        classifier = cPickle.load(input_file)
+        print GabilOptimizer.precision(classifier, go.encoded_test)
 
 # TODO: flatten all rulesets from the beggining and use iterators to 
 # yield lists of 77 characters every time
-# 10, 200, 10, 10000, 0.1 => 0.08816
