@@ -130,7 +130,7 @@ class GeneticOptimizer(object):
 
     def find_optimal(self, **kwargs):
         def process_lap(solution, best, start_time):
-            print "Best solution: " + str(solution[1])
+            print "Best solution: " + str(best[1])
             print "New solution value:  " + str(solution[0])
             print "Best solution value: " + str(best[0])
             print "Elapsed time: %f" % (time() - start_time)
@@ -145,7 +145,8 @@ class GeneticOptimizer(object):
             repetitions += 1
             solution = self.runGA(best=best, **kwargs)
 
-            if compare(solution[0], best[0]) != -1:
+            if compare(solution[0], best[0]) == 1:
+                print "solutions %f %f" % (solution[0], best[0])
                 best = solution
             if compare(solution[0], kwargs['target']) != -1:
                 process_lap(solution, best, start_time)
