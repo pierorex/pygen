@@ -79,6 +79,8 @@ class GabilOptimizer(GeneticOptimizer):
         DocTests:
         >>> GabilOptimizer(3).encode(['b', 50, 8, 'u', 'g', 'c', 'h', 14, 'f', 'f', 20, 't', 'g', 50, 20, '-'])
         [0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+        >>> sum(GabilOptimizer(3).encode(['b', 50, 8, 'u', 'g', 'c', 'h', 14, 'f', 'f', 20, 't', 'g', 50, 20, '-']))
+        16
         """
         encoded = []
 
@@ -185,7 +187,7 @@ class GabilOptimizer(GeneticOptimizer):
         DocTests:
         """
         #return [self.new_rule() for _ in xrange(random.randint(3, self.count_rules))]
-        return [random.choice(self.encoded_train) 
+        return [random.choice(self.encoded_train)
                 for _ in xrange(random.randint(1, self.count_rules))]
 
     def mutate(self, mutate_prob, parents):
@@ -194,11 +196,6 @@ class GabilOptimizer(GeneticOptimizer):
                 rule = random.randint(0, len(solution)-1)
                 bit = random.randint(0, len(solution[rule])-1)
                 solution[rule][bit] = 0 if solution[rule][bit] == 1 else 1
-            #if mutate_prob > random.random():
-            #    solution.append(self.new_rule())
-            #if mutate_prob > random.random():
-            #    if len(solution) > 1:
-            #        solution.pop(random.randint(0, len(solution)-1))
 
     def flatten(self, l):
         """
@@ -229,104 +226,86 @@ class GabilOptimizer(GeneticOptimizer):
 
         return builded
 
-    def locate(self, pos):
-        """
-        >>> GabilOptimizer(3).locate(3, 77)
-        {'attribute': 1, 'offset': 1}
-        >>> GabilOptimizer(3).locate(77, 77)
-        {'attribute': 0, 'offset': 0}
-        >>> GabilOptimizer(3).locate(155, 77)
-        {'attribute': 0, 'offset': 1}
-        >>> GabilOptimizer(3).locate(144, 77)
-        {'attribute': 14, 'offset': 2}
-        >>> GabilOptimizer(3).locate(77*8+1, 77)
-        {'attribute': 0, 'offset': 1}
-        >>> GabilOptimizer(3).locate(77*100+24, 77)
-        {'attribute': 5, 'offset': 7}
-        """
-        while True:
-            acc = 0
-
-            for i in xrange(len(self.classes)):
-                if acc + len(self.classes[i]) > pos:
-                    return {'attribute': i, 'offset': pos - acc}
-                acc += len(self.classes[i])
-
-            pos -= self.rule_length
-
     def mix(self, parent1, parent2):
-        def position(i, offset, rule_length):
-            return (i * rule_length) + offset
         #print "\nMIX"
-        #parent1 = [[1,1,1],[0,0,0]]
-        #parent2 = [[0,0,0],[1,1,1],[1,0,1]]
-        #self.rule_length = 3
         flat1 = self.flatten(parent1)
         flat2 = self.flatten(parent2)
         #print "len(flat) %d %d " % (len(flat1), len(flat2))
         # calculate swap points for parent1
-        pos1 = random.randint(0, len(flat1)-1)
-        pos2 = random.randint(0, len(flat1)-1)
+        pos1, pos2 = 0, 0
+
+        while pos1 == pos2:
+            pos1 = random.randint(0, len(flat1)-1)
+            pos2 = random.randint(0, len(flat1)-1)
 
         if pos1 > pos2:
             pos1, pos2 = pos2, pos1
 
         location1 = pos1 % self.rule_length
         location2 = pos2 % self.rule_length
+
         #print "location %d %d" % (location1, location2)
 
         # calculate swap points for parent2 (based on parent1's locations)
-        #print len(parent2)
-        rule1, rule2 = 0, 0
-
-        while rule1 == rule2:
-            rule1 = random.randint(0, len(parent2)-1)
-            rule2 = random.randint(0, len(parent2)-1)
+        rule1 = random.randint(0, len(parent2)-1)
+        rule2 = random.randint(0, len(parent2)-1)
         
+        if location1 > location2:
+            if len(parent2) == 1:
+                child = list(flat1)
+                child[location2:location1+1] = flat2[location2:location1+1]
+                assert len(child) % self.rule_length == 0
+                return self.build(child, self.rule_length)
+            else:
+                while rule1 == rule2:
+                    rule1 = random.randint(0, len(parent2)-1)
+                    rule2 = random.randint(0, len(parent2)-1)
+
         if rule1 > rule2:
             rule1, rule2 = rule2, rule1
         #print "rule %d %d" % (rule1, rule2)
-        pos3 = position(rule1, location1, self.rule_length)
-        pos4 = position(rule2, location2, self.rule_length)
+        pos3 = (rule1 * self.rule_length) + location1
+        pos4 = (rule2 * self.rule_length) + location2
 
-        if pos3 > pos4:
-            pos3, pos4 = pos4, pos3
-
-        #print "pos: %d %d %d %d" % (pos1, pos2, pos3, pos4)
+        #print "pos %d %d %d %d" % (pos1, pos2, pos3, pos4)
         # create the child by swapping gene segments from parent1
         child = list(flat1)
-        #print len(child)
         child[pos1:pos2+1] = flat2[pos3:pos4+1]
 
         #print "len(flat) %d %d %d" % (len(flat1), len(flat2), len(child))
         assert len(child) % self.rule_length == 0
         child = self.build(child, self.rule_length)
+        if len(child) > 100: return parent1
         return child
 
     @staticmethod
     def matches(example, rule):
+        #print "example\n" + str(example)
+        #print "rule\n" + str(rule)
         for i in xrange(len(example)-2):
             if example[i] == 1 and rule[i] == 0:
                 return False
         return True
 
-    @staticmethod
-    def count_correct(examples, solution):
-        count = 0
-
-        for example in examples:
-            for rule in solution:
-                if GabilOptimizer.matches(example, rule):
-                    if example[len(example)-1] == rule[len(rule)-1]:
-                        count += 1
-                        break
-                    else:
-                        count -= 1
-        return count
-
     def fitness(self, solution):
-        fit = (GabilOptimizer.count_correct(self.train_dataset, solution) /
-              len(self.encoded_train)) ** 2 - (len(solution))
+        def count_correct(examples, solution):
+            count = 0
+
+            for example in examples:
+                for rule in solution:
+                    if GabilOptimizer.matches(example, rule):
+                        if example[len(example)-1] == rule[len(rule)-1]:
+                            count += 1
+                            break
+                        #else:
+                        #    count -= 1
+            #print count
+            return count
+
+
+        fit = (count_correct(self.encoded_train, solution) /
+                len(self.encoded_train)) ** 2
+        #print fit
         return fit
 
     @staticmethod
@@ -347,13 +326,13 @@ class GabilOptimizer(GeneticOptimizer):
 
 
 if __name__ == '__main__':
-    go = GabilOptimizer(5)
+    go = GabilOptimizer(10)
     go.load_input("credit-screening/crx.data", training_percent=0.85)
     best = (float('-inf'), [])
-    solution = go.runGA(best=best, iterations=3, pop_count=10, target=10000.0,
-                        mutate_prob=0.01, reverse=True)
-    #go.find_optimal(iterations=100, pop_count=10, target=10000.0,
-    #                mutate_prob=0.1, reverse=True)
+    #solution = go.runGA(best=best, iterations=20, pop_count=10, target=10000.0,
+    #                    mutate_prob=0.01, reverse=True)
+    go.find_optimal(iterations=200, pop_count=10, target=10000.0,
+                    mutate_prob=0.1, reverse=True)
     print solution[1]
     print "fitness = %d" % solution[0]
     print "len = %d" % len(solution[1])
