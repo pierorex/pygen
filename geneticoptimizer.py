@@ -90,8 +90,11 @@ class GeneticOptimizer(object):
         self.crossover(parents, len(self.pop))
         return parents
 
-    def runGA(self, best, iterations, pop_count, target, debug=False, retain=0.2,
+    def runGA(self, iterations, pop_count, target, best=None, debug=False, retain=0.2,
               diversity_prob=0.05, mutate_prob=0.01, reverse=False):
+        if not best:
+            best = (float('-inf' if kwargs.get('reverse') else 'inf'), [])
+
         self.pop = self.population(pop_count)
         compare = (lambda x, y: cmp(x,y) if reverse else -cmp(x,y))
         i = 0
@@ -140,7 +143,7 @@ class GeneticOptimizer(object):
         while True:
             start_time = time()
             repetitions += 1
-            solution = self.runGA(best, **kwargs)
+            solution = self.runGA(best=best, **kwargs)
 
             if compare(solution[0], best[0]) != -1:
                 best = solution
