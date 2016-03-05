@@ -255,12 +255,15 @@ class GabilOptimizer(GeneticOptimizer):
             pos -= self.rule_length
 
     def mix(self, parent1, parent2):
-        def position(i, offset):
-            return (i * self.rule_length) + offset
-
+        def position(i, offset, rule_length):
+            return (i * rule_length) + offset
+        #print "\nMIX"
+        #parent1 = [[1,1,1],[0,0,0]]
+        #parent2 = [[0,0,0],[1,1,1],[1,0,1]]
+        #self.rule_length = 3
         flat1 = self.flatten(parent1)
         flat2 = self.flatten(parent2)
-
+        #print "len(flat) %d %d " % (len(flat1), len(flat2))
         # calculate swap points for parent1
         pos1 = random.randint(0, len(flat1)-1)
         pos2 = random.randint(0, len(flat1)-1)
@@ -270,28 +273,34 @@ class GabilOptimizer(GeneticOptimizer):
 
         location1 = pos1 % self.rule_length
         location2 = pos2 % self.rule_length
+        #print "location %d %d" % (location1, location2)
 
         # calculate swap points for parent2 (based on parent1's locations)
-        print len(parent2)
-        count_classes = len(flat2) / self.rule_length
-        class1 = random.randint(0, len(parent2)-1)#count_classes
-        class2 = random.randint(0, len(parent2)-1)#count_classes
+        #print len(parent2)
+        rule1, rule2 = 0, 0
+
+        while rule1 == rule2:
+            rule1 = random.randint(0, len(parent2)-1)
+            rule2 = random.randint(0, len(parent2)-1)
         
-        if class1 > class2:
-            class1, class2 = class2, class1
+        if rule1 > rule2:
+            rule1, rule2 = rule2, rule1
+        #print "rule %d %d" % (rule1, rule2)
+        pos3 = position(rule1, location1, self.rule_length)
+        pos4 = position(rule2, location2, self.rule_length)
 
-        pos3 = position(class1, location1)
-        pos4 = position(class2, location2)
+        if pos3 > pos4:
+            pos3, pos4 = pos4, pos3
 
-
-        print pos1, pos2, pos3, pos4
+        #print "pos: %d %d %d %d" % (pos1, pos2, pos3, pos4)
         # create the child by swapping gene segments from parent1
-        child = flat1
+        child = list(flat1)
         #print len(child)
         child[pos1:pos2+1] = flat2[pos3:pos4+1]
-        print len(flat1), len(flat2), len(child)
+
+        #print "len(flat) %d %d %d" % (len(flat1), len(flat2), len(child))
+        assert len(child) % self.rule_length == 0
         child = self.build(child, self.rule_length)
-        #raw_input()
         return child
 
     @staticmethod
@@ -317,7 +326,7 @@ class GabilOptimizer(GeneticOptimizer):
 
     def fitness(self, solution):
         fit = (GabilOptimizer.count_correct(self.train_dataset, solution) /
-              len(self.encoded_train)) ** 2
+              len(self.encoded_train)) ** 2 - (len(solution))
         return fit
 
     @staticmethod
@@ -325,7 +334,7 @@ class GabilOptimizer(GeneticOptimizer):
         count = 0
         print len(dataset), len(dataset[0])
         for example in dataset:
-            print example
+            #print example
             if example[len(example)-2:] == GabilOptimizer.classify(classifier, example):
                 count += 1
         return float(count) / len(dataset)
@@ -338,18 +347,18 @@ class GabilOptimizer(GeneticOptimizer):
 
 
 if __name__ == '__main__':
-    go = GabilOptimizer(10)
+    go = GabilOptimizer(5)
     go.load_input("credit-screening/crx.data", training_percent=0.85)
     best = (float('-inf'), [])
-    solution = go.runGA(best=best, iterations=200, pop_count=10, target=10000.0,
+    solution = go.runGA(best=best, iterations=3, pop_count=10, target=10000.0,
                         mutate_prob=0.01, reverse=True)
     #go.find_optimal(iterations=100, pop_count=10, target=10000.0,
     #                mutate_prob=0.1, reverse=True)
-    #print solution[1]
-    print solution[0]
-    print len(solution[1])
+    print solution[1]
+    print "fitness = %d" % solution[0]
+    print "len = %d" % len(solution[1])
 
-    print GabilOptimizer.precision(solution[1], go.encoded_test)
+    #print GabilOptimizer.precision(solution[1], go.encoded_test)
 
 # TODO: flatten all rulesets from the beggining and use iterators to 
 # yield lists of 77 characters every time
