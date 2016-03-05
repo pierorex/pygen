@@ -93,7 +93,7 @@ class GeneticOptimizer(object):
     def runGA(self, iterations, pop_count, target, best=None, debug=False, retain=0.2,
               diversity_prob=0.05, mutate_prob=0.01, reverse=False):
         if not best:
-            best = (float('-inf' if kwargs.get('reverse') else 'inf'), [])
+            best = (float('-inf' if reverse else 'inf'), [])
 
         self.pop = self.population(pop_count)
         compare = (lambda x, y: cmp(x,y) if reverse else -cmp(x,y))
