@@ -187,7 +187,7 @@ class GabilOptimizer(GeneticOptimizer):
         DocTests:
         """
         #return [self.new_rule() for _ in xrange(random.randint(3, self.count_rules))]
-        return [random.choice(self.encoded_train)
+        return [random.choice([random.choice(self.encoded_train), self.new_rule()])
                 for _ in xrange(random.randint(1, self.count_rules))]
 
     def mutate(self, mutate_prob, parents):
@@ -289,6 +289,7 @@ class GabilOptimizer(GeneticOptimizer):
 
     def fitness(self, solution):
         def count_correct(examples, solution):
+            #solution = [[1 for _ in xrange(len(examples)-2)]+[0,1], [1 for _ in xrange(len(examples)-2)]+[1,0]]
             count = 0
 
             for example in examples:
@@ -299,13 +300,14 @@ class GabilOptimizer(GeneticOptimizer):
                             break
                         #else:
                         #    count -= 1
-            #print count
             return count
 
-
-        fit = (count_correct(self.encoded_train, solution) /
-                len(self.encoded_train)) ** 2
+        c = count_correct(self.encoded_train, solution)
+        #print c
+        fit = ( c /
+                float(len(self.encoded_train))) ** 2
         #print fit
+        #print "exit fit"
         return fit
 
     @staticmethod
@@ -332,7 +334,7 @@ if __name__ == '__main__':
     #solution = go.runGA(best=best, iterations=20, pop_count=10, target=10000.0,
     #                    mutate_prob=0.01, reverse=True)
     go.find_optimal(iterations=200, pop_count=10, target=10000.0,
-                    mutate_prob=0.1, reverse=True)
+                    mutate_prob=0.01, reverse=True)
     print solution[1]
     print "fitness = %d" % solution[0]
     print "len = %d" % len(solution[1])
@@ -341,3 +343,4 @@ if __name__ == '__main__':
 
 # TODO: flatten all rulesets from the beggining and use iterators to 
 # yield lists of 77 characters every time
+# 10, 200, 10, 10000, 0.1 => 0.08816
