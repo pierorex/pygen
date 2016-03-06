@@ -328,19 +328,24 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--file', action='store', dest='file',
-                        required=True, help='File to save/read the produced classifier')
+    parser.add_argument('--input', action='store', dest='input_filename',
+                        required=True,
+                        help='While training: file with training data | While'+\
+                             ' testing: file with the saved classifier')
+    parser.add_argument('--output', action='store', dest='output_filename',
+                        required=True, 
+                        help='File to save the produced classifier')
     parser.add_argument('--action', action='store', dest='action',
                         required=True, help="'train' or 'test'")
     argv = parser.parse_args()
 
-    if  argv.action == 'train':
+    if argv.action == 'train':
         go = GabilOptimizer(15)
-        go.load_input("credit-screening/crx.data", training_percent=0.85)
+        go.load_input(argv.input_filename, training_percent=0.85)
         solution = go.runGA(iterations=400, pop_count=30, target=10000.0,
                             mutate_prob=0.1, reverse=True)
         classifier = solution[1]
-        output_file = open(argv.file, 'w')
+        output_file = open(argv.output_filename, 'w')
         cPickle.dump(classifier, output_file)
         #go.find_optimal(iterations=400, pop_count=20, target=10000.0,
         #                mutate_prob=0.1, reverse=True)
