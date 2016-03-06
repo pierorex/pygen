@@ -332,8 +332,7 @@ if __name__ == '__main__':
                         required=True,
                         help='While training: file with training data | While'+\
                              ' testing: file with the saved classifier')
-    parser.add_argument('--output', action='store', dest='output_filename',
-                        required=True, 
+    parser.add_argument('--output', action='store', dest='output_filename', 
                         help='File to save the produced classifier')
     parser.add_argument('--action', action='store', dest='action',
                         required=True, help="'train' or 'test'")
@@ -345,8 +344,9 @@ if __name__ == '__main__':
         solution = go.runGA(iterations=400, pop_count=30, target=10000.0,
                             mutate_prob=0.1, reverse=True)
         classifier = solution[1]
-        output_file = open(argv.output_filename, 'w')
-        cPickle.dump(classifier, output_file)
+        if argv.output_filename:
+            output_file = open(argv.output_filename, 'w')
+            cPickle.dump(classifier, output_file)
         #go.find_optimal(iterations=400, pop_count=20, target=10000.0,
         #                mutate_prob=0.1, reverse=True)
         #print solution[1]
@@ -355,7 +355,7 @@ if __name__ == '__main__':
     elif argv.action == 'test':
         go = GabilOptimizer(15)
         go.load_input("credit-screening/crx.data", training_percent=0.85)
-        input_file = open(argv.file, 'r')
+        input_file = open(argv.input_filename, 'r')
         classifier = cPickle.load(input_file)
         print GabilOptimizer.precision(classifier, go.encoded_test)
 
