@@ -3,6 +3,10 @@ if __package__ is None:
     from os import sys, path
     sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
     from geneticoptimizer import GeneticOptimizer
+    from parents_mixins import ParentsRoulletteSelectionMixin,\
+        ParentsRandomSelectionMixin
+    from survivors_mixins import SurvivorsRoulletteSelectionMixin,\
+        SurvivorsTruncatedSelectionMixin
 
 import csv
 import random
@@ -305,12 +309,6 @@ class GabilOptimizer(GeneticOptimizer):
         length_penalty = 0  # (float(len(solution)) / 10) * correct_percent_sq
         return correct_percent_sq - length_penalty
 
-    def parents_select(self, **kwargs):
-        return self.parents_select_roullette(**kwargs)
-
-    def survivors_select(self, **kwargs):
-        return self.survivors_select_roullette(**kwargs)
-
 
 if __name__ == '__main__':
     import cPickle
@@ -329,6 +327,10 @@ if __name__ == '__main__':
 
     if argv.action == 'train':
         go = GabilOptimizer(5)
+        go.__class__ = type('Classifier', (ParentsRoulletteSelectionMixin,
+                                           SurvivorsTruncatedSelectionMixin,
+                                           GabilOptimizer),
+                            {})
         go.load_input(argv.input_filename, training_percent=0.85)
         solution = go.runGA(iterations=10, pop_count=30, target=10000.0,
                             mutate_prob=0.1, diversity_prob=0.05, reverse=True)
@@ -341,6 +343,7 @@ if __name__ == '__main__':
         #print solution[1]
         print "fitness = %f" % solution['fitness']
         print "len = %d" % len(solution['individual'])
+
     elif argv.action == 'test':
         go = GabilOptimizer(15)
         go.load_input("credit-screening/crx.data", training_percent=0.85)
