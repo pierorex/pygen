@@ -1,0 +1,15 @@
+Leyend:
+    N-PS-SS-iterations-pop_count-mutate_prob-diversity_prob
+    Where N  := Maximum number of rules for the initial population
+          PS := Parents Selection method (prandom or proullette)
+          SS := Survivors Selection method (strunc or sroullette)
+
+32 mins, 43% precision: 15-proullette-strunc-1000-40-0.1-0.05  
+50 mins, 7%  precision: 15-proullette-sroullette-1000-40-0.1-0.05       
+30 mins, 27% precision: 15-prandom-sroullette-1000-40-0.1-0.05          
+35 mins, 33% precision: 15-prandom-strunc-1000-40-0.1-0.05              
+
+48 mins, 15% precision: 15-prandom-strunc-1000-40-0.01-0.05             
+32 mins, 7%  precision: 15-prandom-sroullette-1000-40-0.01-0.05       
+         35% precision: 15-proullette-sroullette-1000-40-0.01-0.05
+         20% precision: 15-proullette-strunc-1000-40-0.01-0.05
