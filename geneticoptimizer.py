@@ -74,27 +74,29 @@ class GeneticOptimizer(object):
     def parents_select_random(self, parents):
         return (randint(0, len(parents)-1), randint(0, len(parents)-1))
 
-    def roullette_pick(self, parents):
+    def roullette_pick(self, arr):
         """Returns the index of the parent chosen by the roullette"""
         rand = random()
-        for i in xrange(len(parents)):
-            if rand < parents[i]['prob']:
+        for i in xrange(len(arr)):
+            if rand < arr[i]['prob']:
                 return i
 
-    def parents_select_roullette(self, parents):
-        total_fitness = sum(p['fitness'] for p in parents)
+    def calculate_probs_roullette(self, arr):
+        total_fitness = sum(x['fitness'] for x in arr)
         total_prob = 0.0
 
         # calculate accumulated probability for each individual depending on
         # its fitness
-        for parent in parents:
-            parent['prob'] = total_prob + (parent['fitness'] / total_fitness)
-            total_prob = parent['prob']
+        for x in arr:
+            x['prob'] = total_prob + (x['fitness'] / total_fitness)
+            total_prob = x['prob']
 
         # the last one should have prob == 1.0, computers numeric imprecision
         # forces us to do this manually
-        parents[len(parents)-1]['prob'] = 1.0
+        arr[len(arr)-1]['prob'] = 1.0
 
+    def parents_select_roullette(self, parents):
+        self.calculate_probs_roullette(parents)
         # roullette-pick two parents and return them both
         return (self.roullette_pick(parents), self.roullette_pick(parents))
 
@@ -104,6 +106,27 @@ class GeneticOptimizer(object):
         choice.
         """
         return self.parents_select_random(**kwargs)
+
+    def survivors_select_truncated(self, ranked, retain_length):
+        return ranked[:retain_length]
+
+    def survivors_select_roullette(self, ranked, retain_length):
+        self.calculate_probs_roullette(ranked)
+        # roullette-pick 'retain_length' survivors
+        survivors = []
+        
+        while len(survivors) < retain_length:
+            chosen = ranked[self.roullette_pick(ranked)]
+            survivors.append(chosen)
+            ranked.remove(chosen)
+        return survivors
+
+    def survivors_select(self, **kwargs):
+        """
+        Override this method to choose the survivor-selection algorithm of your
+        choice.
+        """
+        return self.survivors_select_truncated(**kwargs)
 
     def crossover(self, parents, pop_length): 
         desired_length = pop_length - len(parents)
@@ -124,7 +147,8 @@ class GeneticOptimizer(object):
 
     def evolve(self, ranked, retain, diversity_prob, mutate_prob):
         retain_length = int(len(ranked) * retain)
-        parents = ranked[:retain_length]
+        parents = self.survivors_select(ranked=ranked, 
+                                        retain_length=retain_length)
         self.promote_diversity(ranked, retain_length, parents, diversity_prob)
         self.mutate(mutate_prob, parents)
         self.crossover(parents, len(self.pop))

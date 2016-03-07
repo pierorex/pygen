@@ -194,7 +194,7 @@ class GabilOptimizer(GeneticOptimizer):
     def mutate(self, mutate_prob, parents):
         for solution in parents:
             if mutate_prob > random.random():
-                rule = random.randint(0, len(solution)-1)
+                rule = random.randint(0, len(solution['individual'])-1)
                 bit = random.randint(0, len(solution['individual'][rule])-1)
                 solution['individual'][rule][bit] = \
                     0 if solution['individual'][rule][bit] == 1 else 1
@@ -307,6 +307,9 @@ class GabilOptimizer(GeneticOptimizer):
 
     def parents_select(self, **kwargs):
         return self.parents_select_roullette(**kwargs)
+
+    def survivors_select(self, **kwargs):
+        return self.survivors_select_roullette(**kwargs)
 
 
 if __name__ == '__main__':
