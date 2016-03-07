@@ -195,8 +195,9 @@ class GabilOptimizer(GeneticOptimizer):
         for solution in parents:
             if mutate_prob > random.random():
                 rule = random.randint(0, len(solution)-1)
-                bit = random.randint(0, len(solution[rule])-1)
-                solution[rule][bit] = 0 if solution[rule][bit] == 1 else 1
+                bit = random.randint(0, len(solution['individual'][rule])-1)
+                solution['individual'][rule][bit] = \
+                    0 if solution['individual'][rule][bit] == 1 else 1
 
     def flatten(self, l):
         """
@@ -279,8 +280,7 @@ class GabilOptimizer(GeneticOptimizer):
         if len(child) > 100: return parent1
         return child
 
-    @staticmethod
-    def matches(example, rule):
+    def matches(self, example, rule):
         #print "example\n" + str(example)
         #print "rule\n" + str(rule)
         for i in xrange(len(example)-2):
@@ -290,37 +290,20 @@ class GabilOptimizer(GeneticOptimizer):
 
     def fitness(self, solution):
         def count_correct(examples, solution):
-            #solution = [[1 for _ in xrange(len(examples)-2)]+[0,1], [1 for _ in xrange(len(examples)-2)]+[1,0]]
             count = 0
 
             for example in examples:
                 for rule in solution:
-                    if GabilOptimizer.matches(example, rule):
+                    if self.matches(example, rule):
                         if example[len(example)-1] == rule[len(rule)-1]:
                             count += 1
                             break
             return count
 
-        fit = (count_correct(self.encoded_train, solution) /
-                float(len(self.encoded_train))) ** 2 - (0 if len(solution) < 20 else len(solution))
-        return fit
-
-    @staticmethod
-    def precision(classifier, dataset):
-        count = 0
-        print len(dataset), len(dataset[0])
-        for example in dataset:
-            #print example
-            if example[len(example)-2:] == GabilOptimizer.classify(classifier, example):
-                count += 1
-        print count
-        return float(count) / len(dataset)
-
-    @staticmethod
-    def classify(classifier, example):
-        for rule in classifier:
-            if GabilOptimizer.matches(example, rule):
-                return rule[len(rule)-2:]
+        correct = count_correct(self.encoded_train, solution)
+        correct_percent_sq = (correct / float(len(self.encoded_train))) ** 2
+        length_penalty = 0  # (float(len(solution)) / 10) * correct_percent_sq
+        return correct_percent_sq - length_penalty
 
 
 if __name__ == '__main__':
@@ -341,23 +324,23 @@ if __name__ == '__main__':
     if argv.action == 'train':
         go = GabilOptimizer(15)
         go.load_input(argv.input_filename, training_percent=0.85)
-        solution = go.runGA(iterations=400, pop_count=30, target=10000.0,
-                            mutate_prob=0.1, reverse=True)
-        classifier = solution[1]
+        solution = go.runGA(iterations=150, pop_count=30, target=10000.0,
+                            mutate_prob=0.1, diversity_prob=0.05, reverse=True)
+        classifier = solution['individual']
         if argv.output_filename:
             output_file = open(argv.output_filename, 'w')
             cPickle.dump(classifier, output_file)
         #go.find_optimal(iterations=400, pop_count=20, target=10000.0,
         #                mutate_prob=0.1, reverse=True)
         #print solution[1]
-        print "fitness = %d" % solution[0]
-        print "len = %d" % len(solution[1])
+        print "fitness = %f" % solution['fitness']
+        print "len = %d" % len(solution['individual'])
     elif argv.action == 'test':
         go = GabilOptimizer(15)
         go.load_input("credit-screening/crx.data", training_percent=0.85)
         input_file = open(argv.input_filename, 'r')
         classifier = cPickle.load(input_file)
-        print GabilOptimizer.precision(classifier, go.encoded_test)
+        print go.precision(classifier, go.encoded_test, 2)
 
 # TODO: flatten all rulesets from the beggining and use iterators to 
 # yield lists of 77 characters every time

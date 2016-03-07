@@ -1,5 +1,6 @@
 from random import randint, random
 from time import time
+from operator import itemgetter
 
 
 class GeneticOptimizer(object):
@@ -41,20 +42,23 @@ class GeneticOptimizer(object):
         return [randint(self.min, self.max) for i in xrange(self.length)]
 
     def population(self, pop_count):
-        return [self.individual() for x in xrange(pop_count)]
+        return [{'individual': self.individual(), 'fitness': None} 
+                for x in xrange(pop_count)]
 
     def fitness(self, x):
+        #print x
         return abs(self.goal - sum(x))
 
     def rank(self, x):
-        return sum(self.fitness(x) for x in self.pop) / (len(self.pop) * 1.0)
+        return sum(self.fitness(x['individual']) 
+                   for x in self.pop) / (len(self.pop) * 1.0)
 
     def mutate(self, mutate_prob, parents):
         for individual in parents:
             if mutate_prob > random():
                 pos_to_mutate = randint(0, len(individual)-1)
-                individual[pos_to_mutate] = \
-                    randint(min(individual), max(individual))
+                individual['individual'][pos_to_mutate] = \
+                    randint(self.min, self.max)
 
     def promote_diversity(self, ranked, retain_length, parents,
                           diversity_prob):
@@ -67,19 +71,30 @@ class GeneticOptimizer(object):
         child = parent1[:half] + parent2[half:]
         return child
 
-    def crossover(self, parents, pop_length):
-        parents_length = len(parents)
-        desired_length = pop_length - parents_length
+    def select_random_parents(self, parents):
+        return (randint(0, len(parents)-1), randint(0, len(parents)-1))
+
+    def select_roullette_parents(self, parents, ranked):
+        raise NotImplementedError
+
+    def select(self, **kwargs):
+        return self.select_random_parents(**kwargs)
+
+    def crossover(self, parents, pop_length): 
+        desired_length = pop_length - len(parents)
         children = []
 
         while len(children) < desired_length:
-            male = randint(0, parents_length-1)
-            female = randint(0, parents_length-1)
+            male, female = self.select(parents=parents)
             if male != female:
                 male = parents[male]
                 female = parents[female]
-                children.append(self.mix(male, female))
-                children.append(self.mix(female, male))
+                children.append({'fitness':0,
+                                 'individual': self.mix(male['individual'],
+                                                        female['individual'])})
+                children.append({'fitness':0,
+                                 'individual': self.mix(female['individual'],
+                                                        male['individual'])})
         parents.extend(children)
 
     def evolve(self, ranked, retain, diversity_prob, mutate_prob):
@@ -93,7 +108,8 @@ class GeneticOptimizer(object):
     def runGA(self, iterations, pop_count, target, best=None, debug=False, retain=0.2,
               diversity_prob=0.05, mutate_prob=0.01, reverse=False):
         if not best:
-            best = (float('-inf' if reverse else 'inf'), [])
+            best = {'fitness': float('-inf' if reverse else 'inf'), 
+                    'individual': []}
 
         self.pop = self.population(pop_count)
         compare = (lambda x, y: cmp(x,y) if reverse else -cmp(x,y))
@@ -103,42 +119,42 @@ class GeneticOptimizer(object):
 
         while i < iterations:
             i += 1
-            ranked = sorted([(self.fitness(x), x) for x in self.pop],
-                            reverse=reverse)
-            ranks = [x[0] for x in ranked]
-            solutions = [x[1] for x in ranked]
+            ranked = sorted([{'fitness': self.fitness(x['individual']), 
+                              'individual': x['individual']} 
+                             for x in self.pop], reverse=reverse, 
+                            key=itemgetter('fitness'))
 
             # did we arrive at the target solution?
-            if target in ranks:
+            if target == ranked[0]['fitness']:
                 return ranked[0]
 
-            if compare(ranks[0], best[0]) > 0:
-                print ranks[0], best[0]
-                best = (ranks[0], solutions[0])
+            if compare(ranked[0]['fitness'], best['fitness']) > 0:
+                print ranked[0]['fitness'], best['fitness']
+                best = dict(ranked[0])
                 #iterations += 3
 
-            self.pop = self.evolve(solutions, retain, diversity_prob,
+            self.pop = self.evolve(ranked, retain, diversity_prob,
                                    mutate_prob)
-
-            # if debug:
-            #     self.fitness_history.append((self.rank(self.pop), self.pop))
+            #print self.pop
 
         # we missed the target, let's analyze how we scored
-        ranked = sorted([(self.fitness(x), x) for x in self.pop], 
-                        reverse=reverse)
+        ranked = sorted([{'fitness': self.fitness(x['individual']), 'individual': x['individual']} 
+                         for x in self.pop], reverse=reverse)
+        print ranked[0]
         return self.population_report() if debug else ranked[0]
 
-    def find_optimal(self, **kwargs):
+    def find_optimal(self, reverse=False, **kwargs):
         def process_lap(solution, best, start_time):
-            print "Best solution: " + str(best[1])
-            print "len(Best solution): %d " % len(best[1])
-            print "New solution value:  " + str(solution[0])
-            print "Best solution value: " + str(best[0])
+            print "Best solution: " + str(best['individual'])
+            print "len(Best solution): %d " % len(best['individual'])
+            print "New solution value:  " + str(solution['fitness'])
+            print "Best solution value: " + str(best['fitness'])
             print "Elapsed time: %f" % (time() - start_time)
             print
 
         repetitions = 0
-        best = (float('-inf' if kwargs.get('reverse') else 'inf'), [])
+        best = {'fitness': float('-inf' if reverse else 'inf'), 
+                'individual': []}
         compare = (lambda x, y: cmp(x,y) if kwargs.get('reverse') else -cmp(x,y))
 
         while True:
@@ -146,10 +162,10 @@ class GeneticOptimizer(object):
             repetitions += 1
             solution = self.runGA(best=best, **kwargs)
 
-            if compare(solution[0], best[0]) == 1:
-                print "solutions %f %f" % (solution[0], best[0])
+            if compare(solution['fitness'], best['fitness']) == 1:
+                print "solutions %f %f" % (solution['fitness'], best['fitness'])
                 best = solution
-            if compare(solution[0], kwargs['target']) != -1:
+            if compare(solution['fitness'], kwargs['target']) != -1:
                 process_lap(solution, best, start_time)
                 print ("Took %d repetitions to get to the optimal " +
                        "solution") % repetitions
@@ -166,7 +182,23 @@ class GeneticOptimizer(object):
 
         return best
 
+    def precision(self, classifier, dataset, class_length):
+        count = 0
+        print len(dataset), len(dataset[0])
+        for example in dataset:
+            #print example
+            prediction = self.predict(classifier, example, class_length)
+            if example[len(example) - class_length:] == prediction:
+                count += 1
+        print count
+        return float(count) / len(dataset)
+
+    def predict(self, classifier, example, class_length):
+        for rule in classifier:
+            if self.matches(example, rule):
+                return rule[len(rule) - class_length:]
+
 
 if __name__ == '__main__':
-    a = GeneticOptimizer()
-    a.find_optimal(iterations=300, pop_count=100, target=0.0, mutate_prob=0.1)
+    a = GeneticOptimizer(goal=1000, length=5, i_min=10, i_max=1000)
+    a.find_optimal(iterations=10, pop_count=100, target=0.0, mutate_prob=0.1)
