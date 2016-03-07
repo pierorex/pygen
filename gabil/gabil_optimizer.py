@@ -59,13 +59,13 @@ class GabilOptimizer(GeneticOptimizer):
                     break
         return example
 
-    def remove_na(self, example):
+    def fill_na(self, example):
         """
         :param example: example given for classification
         :return: curated example without NA's
 
         DocTests:
-        >>> '?' in GabilOptimizer(3).remove_na(['b',34.83,4,'u','g','d','bb',12.5,'t','f',0,'t','g','?',0,'-'])
+        >>> '?' in GabilOptimizer(3).fill_na(['b',34.83,4,'u','g','d','bb',12.5,'t','f',0,'t','g','?',0,'-'])
         False
         """
         for i in xrange(len(example)):
@@ -74,6 +74,17 @@ class GabilOptimizer(GeneticOptimizer):
 
         assert '?' not in example
         return example
+
+    def remove_na(self, dataset, symbol='?'):
+        """
+        :return: cleaned dataset without cases with NA's ('?')
+
+        >>> GabilOptimizer(3).remove_na([['?',1],[1,1],['?',2]])
+        [[1, 1]]
+        >>> GabilOptimizer(3).remove_na([['?',1],['NA',1],['?',2]], 'NA')
+        [['?', 1], ['?', 2]]
+        """
+        return [i for i in dataset if symbol not in i]
 
     def encode(self, decoded):
         """
@@ -142,17 +153,16 @@ class GabilOptimizer(GeneticOptimizer):
         train_len = int(training_percent * len(self.examples))
         # training dataset
         self.train_dataset = list([line for line in self.examples[:train_len]])
-        self.train_dataset = [self.remove_na(e) for e in self.train_dataset]
+        self.train_dataset = self.remove_na(self.train_dataset)
         self.train_dataset = [self.discretize_example(e) 
                               for e in self.train_dataset]
         self.encoded_train = [self.encode(e) for e in self.train_dataset]
         # testing dataset
         self.test_dataset  = list([line for line in self.examples[train_len:]])
-        self.test_dataset = [self.remove_na(e) for e in self.test_dataset]
+        self.test_dataset = self.remove_na(self.test_dataset)
         self.test_dataset = [self.discretize_example(e) 
                              for e in self.test_dataset]
         self.encoded_test = [self.encode(e) for e in self.test_dataset]
-        #self.decoded_examples = [self.decode(e) for e in self.encoded_examples]
 
     @staticmethod
     def new_rule():
