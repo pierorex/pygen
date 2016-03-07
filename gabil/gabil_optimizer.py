@@ -295,6 +295,16 @@ class GabilOptimizer(GeneticOptimizer):
         return child
 
     def matches(self, example, rule):
+        """
+        >>> GabilOptimizer(3).matches([1,1,1,1], [0,0,1,1])
+        False
+        >>> GabilOptimizer(3).matches([1,1,1,0], [1,1,0,0])
+        True
+        >>> GabilOptimizer(3).matches([1,1,1,1], [1,1,1,0])
+        True
+        >>> GabilOptimizer(3).matches([0,0,1,1], [0,0,0,0])
+        True
+        """
         #print "example\n" + str(example)
         #print "rule\n" + str(rule)
         for i in xrange(len(example)-2):
@@ -312,6 +322,8 @@ class GabilOptimizer(GeneticOptimizer):
                         if example[len(example)-1] == rule[len(rule)-1]:
                             count += 1
                             break
+                        else:
+                            count -= 1
             return count
 
         correct = count_correct(self.encoded_train, solution)
@@ -321,6 +333,7 @@ class GabilOptimizer(GeneticOptimizer):
 
 
 if __name__ == '__main__':
+    import cProfile
     import cPickle
     import argparse
 
@@ -336,13 +349,15 @@ if __name__ == '__main__':
     argv = parser.parse_args()
 
     if argv.action == 'train':
-        go = GabilOptimizer(5)
-        go.__class__ = type('Classifier', (ParentsRoulletteSelectionMixin,
+        go = GabilOptimizer(15)
+        go.__class__ = type('Classifier', (ParentsRandomSelectionMixin,
                                            SurvivorsTruncatedSelectionMixin,
                                            GabilOptimizer),
                             {})
         go.load_input(argv.input_filename, training_percent=0.85)
-        solution = go.runGA(iterations=10, pop_count=30, target=10000.0,
+        #cProfile.runctx("solution = go.runGA(iterations=100, pop_count=30, target=10000.0, mutate_prob=0.1, diversity_prob=0.05, reverse=True)",
+        #                None, locals())
+        solution = go.runGA(iterations=1000, pop_count=40, target=10000.0,
                             mutate_prob=0.1, diversity_prob=0.05, reverse=True)
         classifier = solution['individual']
         if argv.output_filename:
@@ -363,3 +378,5 @@ if __name__ == '__main__':
 
 # TODO: flatten all rulesets from the beggining and use iterators to 
 # yield lists of 77 characters every time
+
+# 32 mins, 40% precision: 15, ParentsRoulletteSelectionMixin, SurvivorsTruncatedSelectionMixin, 1000, 40, 0.1, 0.05
