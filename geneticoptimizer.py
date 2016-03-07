@@ -178,13 +178,13 @@ class GeneticOptimizer(object):
 
     def precision(self, classifier, dataset, class_length):
         count = 0
-        print len(dataset), len(dataset[0])
+        #print len(dataset), len(dataset[0])
         for example in dataset:
             #print example
             prediction = self.predict(classifier, example, class_length)
             if example[len(example) - class_length:] == prediction:
                 count += 1
-        print count
+        #print count
         return float(count) / len(dataset)
 
     def predict(self, classifier, example, class_length):

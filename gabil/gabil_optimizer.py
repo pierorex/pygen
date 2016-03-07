@@ -149,20 +149,17 @@ class GabilOptimizer(GeneticOptimizer):
         input_file = open(file_path, "r")
         csvreader = csv.reader(input_file)
         self.examples = [line for line in csvreader]
+        self.examples = self.remove_na(self.examples)
+        self.examples = [self.discretize_example(e) for e in self.examples]
         random.shuffle(self.examples)
         train_len = int(training_percent * len(self.examples))
         # training dataset
         self.train_dataset = list([line for line in self.examples[:train_len]])
-        self.train_dataset = self.remove_na(self.train_dataset)
-        self.train_dataset = [self.discretize_example(e) 
-                              for e in self.train_dataset]
         self.encoded_train = [self.encode(e) for e in self.train_dataset]
         # testing dataset
         self.test_dataset  = list([line for line in self.examples[train_len:]])
-        self.test_dataset = self.remove_na(self.test_dataset)
-        self.test_dataset = [self.discretize_example(e) 
-                             for e in self.test_dataset]
         self.encoded_test = [self.encode(e) for e in self.test_dataset]
+        input_file.close()
 
     @staticmethod
     def new_rule():
@@ -331,6 +328,22 @@ class GabilOptimizer(GeneticOptimizer):
         length_penalty = 0  # (float(len(solution)) / 10) * correct_percent_sq
         return correct_percent_sq - length_penalty
 
+    def avg_precision(self, classifier, class_length, iterations):
+        """
+        Measure the precision of a classifier with shuffled datasets to get an
+        average
+        :param classifier: trained model
+        :param class_length: length of the class attribute in an example
+        :param iterations: number of precisions to calculate
+        :return: averaged precision
+        """
+        acc = 0.0
+
+        for i in xrange(iterations):
+            go.load_input("credit-screening/crx.data", training_percent=0.85)
+            acc += go.precision(classifier, go.encoded_test, class_length)
+
+        return acc / iterations
 
 if __name__ == '__main__':
     import cProfile
@@ -351,14 +364,14 @@ if __name__ == '__main__':
     if argv.action == 'train':
         go = GabilOptimizer(15)
         go.__class__ = type('Classifier', (ParentsRandomSelectionMixin,
-                                           SurvivorsTruncatedSelectionMixin,
+                                           SurvivorsRoulletteSelectionMixin,
                                            GabilOptimizer),
                             {})
         go.load_input(argv.input_filename, training_percent=0.85)
         #cProfile.runctx("solution = go.runGA(iterations=100, pop_count=30, target=10000.0, mutate_prob=0.1, diversity_prob=0.05, reverse=True)",
         #                None, locals())
         solution = go.runGA(iterations=1000, pop_count=40, target=10000.0,
-                            mutate_prob=0.1, diversity_prob=0.05, reverse=True)
+                            mutate_prob=0.01, diversity_prob=0.05, reverse=True)
         classifier = solution['individual']
         if argv.output_filename:
             output_file = open(argv.output_filename, 'w')
@@ -374,9 +387,7 @@ if __name__ == '__main__':
         go.load_input("credit-screening/crx.data", training_percent=0.85)
         input_file = open(argv.input_filename, 'r')
         classifier = cPickle.load(input_file)
-        print go.precision(classifier, go.encoded_test, 2)
+        print go.avg_precision(classifier, class_length=2, iterations=100)
 
 # TODO: flatten all rulesets from the beggining and use iterators to 
 # yield lists of 77 characters every time
-
-# 32 mins, 40% precision: 15, ParentsRoulletteSelectionMixin, SurvivorsTruncatedSelectionMixin, 1000, 40, 0.1, 0.05
