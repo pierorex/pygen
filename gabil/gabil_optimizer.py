@@ -305,6 +305,9 @@ class GabilOptimizer(GeneticOptimizer):
         length_penalty = 0  # (float(len(solution)) / 10) * correct_percent_sq
         return correct_percent_sq - length_penalty
 
+    def parents_select(self, **kwargs):
+        return self.parents_select_roullette(**kwargs)
+
 
 if __name__ == '__main__':
     import cPickle
@@ -322,9 +325,9 @@ if __name__ == '__main__':
     argv = parser.parse_args()
 
     if argv.action == 'train':
-        go = GabilOptimizer(15)
+        go = GabilOptimizer(5)
         go.load_input(argv.input_filename, training_percent=0.85)
-        solution = go.runGA(iterations=150, pop_count=30, target=10000.0,
+        solution = go.runGA(iterations=10, pop_count=30, target=10000.0,
                             mutate_prob=0.1, diversity_prob=0.05, reverse=True)
         classifier = solution['individual']
         if argv.output_filename:

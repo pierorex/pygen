@@ -71,21 +71,46 @@ class GeneticOptimizer(object):
         child = parent1[:half] + parent2[half:]
         return child
 
-    def select_random_parents(self, parents):
+    def parents_select_random(self, parents):
         return (randint(0, len(parents)-1), randint(0, len(parents)-1))
 
-    def select_roullette_parents(self, parents, ranked):
-        raise NotImplementedError
+    def roullette_pick(self, parents):
+        """Returns the index of the parent chosen by the roullette"""
+        rand = random()
+        for i in xrange(len(parents)):
+            if rand < parents[i]['prob']:
+                return i
 
-    def select(self, **kwargs):
-        return self.select_random_parents(**kwargs)
+    def parents_select_roullette(self, parents):
+        total_fitness = sum(p['fitness'] for p in parents)
+        total_prob = 0.0
+
+        # calculate accumulated probability for each individual depending on
+        # its fitness
+        for parent in parents:
+            parent['prob'] = total_prob + (parent['fitness'] / total_fitness)
+            total_prob = parent['prob']
+
+        # the last one should have prob == 1.0, computers numeric imprecision
+        # forces us to do this manually
+        parents[len(parents)-1]['prob'] = 1.0
+
+        # roullette-pick two parents and return them both
+        return (self.roullette_pick(parents), self.roullette_pick(parents))
+
+    def parents_select(self, **kwargs):
+        """
+        Override this method to choose the parent-selection algorithm of your
+        choice.
+        """
+        return self.parents_select_random(**kwargs)
 
     def crossover(self, parents, pop_length): 
         desired_length = pop_length - len(parents)
         children = []
 
         while len(children) < desired_length:
-            male, female = self.select(parents=parents)
+            male, female = self.parents_select(parents=parents)
             if male != female:
                 male = parents[male]
                 female = parents[female]
@@ -140,7 +165,6 @@ class GeneticOptimizer(object):
         # we missed the target, let's analyze how we scored
         ranked = sorted([{'fitness': self.fitness(x['individual']), 'individual': x['individual']} 
                          for x in self.pop], reverse=reverse)
-        print ranked[0]
         return self.population_report() if debug else ranked[0]
 
     def find_optimal(self, reverse=False, **kwargs):
