@@ -14,7 +14,7 @@ for i in {0..4}
 	do for j in {0..3}
 		do for k in {0..1}
 			do for l in {0..1}
-				do	python gabil_optimizer.py 	--action train \
+				do	pypy gabil_optimizer.py 	--action train \
 												--input credit-screening/crx.data \
 												--count_rules $rules \
 												--iterations $ite \
