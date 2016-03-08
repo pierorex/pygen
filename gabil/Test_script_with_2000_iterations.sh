@@ -23,7 +23,7 @@ for i in {0..4}
 												--retain ${retain[$j]} \
 												--parents ${parent[$k]} \
 												--survivors ${survivor[$l]} \
-												--output $rules-${parentN[$k]}-${survivorN[$l]}-$ite-$pop_count-${mutation[$i]}-${retain[$j]}-$diversity.txt >> Log.txt
+												--output $rules-${parentN[$k]}-${survivorN[$l]}-$ite-$pop_count-${mutation[$i]}-${retain[$j]}-$diversity >> Log.txt
 					echo "Finished $rules-${parentN[$k]}-${survivorN[$l]}-$ite-$pop_count-${mutation[$i]}-${retain[$j]}-$diversity"
 			done
 		done
