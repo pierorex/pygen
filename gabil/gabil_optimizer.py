@@ -318,9 +318,9 @@ class GabilOptimizer(GeneticOptimizer):
                     if self.matches(example, rule):
                         if example[len(example)-1] == rule[len(rule)-1]:
                             count += 1
-                            break
                         else:
                             count -= 1
+                        break
             return count
 
         correct = count_correct(self.encoded_train, solution)
