@@ -15,7 +15,11 @@ Leyend:
          20% precision: 15-proullette-strunc-1000-40-0.01-0.2-0.05
 
 62 mins, 79% precision: 20-proullette-strunc-1500-40-0.2-0.2-0.01
-62 mins, 31% precision: 20-proullete-strunc-1500-40-0.05-0.2-0.01
+62 mins, 31% precision: 20-proullette-strunc-1500-40-0.05-0.2-0.01
 93 mins, 57% precision: 20-proullette-strunc-1500-40-0.3-0.2-0.01
 
-9  mins, 40% precision: 20-proullette-strunc-500-40-0.2-0.2-0.01
+51 mins, 55% precision: 20-proullette-strunc-1500-40-0.2-0.15-0.01
+58 mins, 59% precision: 20-proullette-strunc-1500-40-0.2-0.10-0.01
+74 mins, 77% precision: 20-proullette-strunc-1500-40-0.1-0.2-0.01     (length-limiting)
+ 9 mins, 40% precision: 20-proullette-strunc-500-40-0.2-0.2-0.01     (length-limiting)
+42 mins, 52% precision: 20-proullette-strunc-1500-40-0.2-0.2-0.01    (length-limiting)
