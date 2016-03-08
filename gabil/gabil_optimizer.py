@@ -346,7 +346,6 @@ class GabilOptimizer(GeneticOptimizer):
         return acc / iterations
 
 if __name__ == '__main__':
-    import cProfile
     import cPickle
     import argparse
 
@@ -359,22 +358,48 @@ if __name__ == '__main__':
                         help='File to save the produced classifier')
     parser.add_argument('--action', action='store', dest='action',
                         required=True, help="'train' or 'test'")
-    argv = parser.parse_args()
+    parser.add_argument('--count_rules', action='store', dest='count_rules',
+                        type=int, default=15, 
+                        help='Max number of rules on initial population')
+    parser.add_argument('--iterations', action='store', dest='iterations',
+                        type=int, default=1000,
+                        help='Number of iterations to perform')
+    parser.add_argument('--pop_count', action='store', dest='pop_count',
+                        type=int, default=50,
+                        help='Total number of individuals in the population')
+    parser.add_argument('--mutate_prob', action='store', dest='mutate_prob',
+                        type=float, default=0.01,
+                        help='Probability in [0..1] to mutate an individual')
+    parser.add_argument('--diversity_prob', action='store', type=float,
+                        dest='diversity_prob', default=0.05,
+                        help='Probability in [0..1] to save an ' + \
+                             'unfitted individual')
+    parser.add_argument('--parents', action='store', dest='parents',
+                        default='roullette',
+                        help='Parents selection method: random, roullette')
+    parser.add_argument('--survivors', action='store', dest='survivors',
+                        default='truncated',
+                        help='Survivors selection method: ' + \
+                             'truncated, roullette')
+    args = parser.parse_args()
 
-    if argv.action == 'train':
-        go = GabilOptimizer(15)
-        go.__class__ = type('Classifier', (ParentsRandomSelectionMixin,
-                                           SurvivorsRoulletteSelectionMixin,
-                                           GabilOptimizer),
-                            {})
-        go.load_input(argv.input_filename, training_percent=0.85)
-        #cProfile.runctx("solution = go.runGA(iterations=100, pop_count=30, target=10000.0, mutate_prob=0.1, diversity_prob=0.05, reverse=True)",
-        #                None, locals())
-        solution = go.runGA(iterations=1000, pop_count=40, target=10000.0,
-                            mutate_prob=0.01, diversity_prob=0.05, reverse=True)
+    if args.action == 'train':
+        go = GabilOptimizer(args.count_rules)
+        go.__class__ = \
+            type('Classifier', 
+                 (eval('Parents%sSelectionMixin' % args.parents.capitalize()),
+                  eval('Survivors%sSelectionMixin'%args.survivors.capitalize()),
+                  GabilOptimizer), {})
+        go.load_input(args.input_filename, training_percent=0.85)
+        solution = go.runGA(iterations=args.iterations, 
+                            pop_count=args.pop_count,
+                            target=10000.0,
+                            mutate_prob=args.mutate_prob,
+                            diversity_prob=args.diversity_prob,
+                            reverse=True)
         classifier = solution['individual']
-        if argv.output_filename:
-            output_file = open(argv.output_filename, 'w')
+        if args.output_filename:
+            output_file = open(args.output_filename, 'w')
             cPickle.dump(classifier, output_file)
         #go.find_optimal(iterations=400, pop_count=20, target=10000.0,
         #                mutate_prob=0.1, reverse=True)
@@ -382,10 +407,10 @@ if __name__ == '__main__':
         print "fitness = %f" % solution['fitness']
         print "len = %d" % len(solution['individual'])
 
-    elif argv.action == 'test':
+    elif args.action == 'test':
         go = GabilOptimizer(15)
         go.load_input("credit-screening/crx.data", training_percent=0.85)
-        input_file = open(argv.input_filename, 'r')
+        input_file = open(args.input_filename, 'r')
         classifier = cPickle.load(input_file)
         print go.avg_precision(classifier, class_length=2, iterations=100)
 
