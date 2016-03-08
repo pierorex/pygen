@@ -17,3 +17,5 @@ Leyend:
 62 mins, 79% precision: 20-proullette-strunc-1500-40-0.2-0.2-0.01
 62 mins, 31% precision: 20-proullete-strunc-1500-40-0.05-0.2-0.01
 93 mins, 57% precision: 20-proullette-strunc-1500-40-0.3-0.2-0.01
+
+9  mins, 40% precision: 20-proullette-strunc-500-40-0.2-0.2-0.01
