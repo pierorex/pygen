@@ -374,6 +374,10 @@ if __name__ == '__main__':
                         dest='diversity_prob', default=0.05,
                         help='Probability in [0..1] to save an ' + \
                              'unfitted individual')
+    parser.add_argument('--retain_percent', action='store', type=float,
+                        dest='retain_percent', default=0.2,
+                        help='Probability in [0..1] that a parent will live' +\
+                             ' another generation (inverse of crossover rate)')
     parser.add_argument('--parents', action='store', dest='parents',
                         default='roullette',
                         help='Parents selection method: random, roullette')
@@ -395,6 +399,7 @@ if __name__ == '__main__':
                             pop_count=args.pop_count,
                             target=10000.0,
                             mutate_prob=args.mutate_prob,
+                            retain_percent=args.retain_percent,
                             diversity_prob=args.diversity_prob,
                             reverse=True)
         classifier = solution['individual']

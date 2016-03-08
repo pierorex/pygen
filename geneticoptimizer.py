@@ -90,8 +90,8 @@ class GeneticOptimizer(object):
                                                         male['individual'])})
         parents.extend(children)
 
-    def evolve(self, ranked, retain, diversity_prob, mutate_prob):
-        retain_length = int(len(ranked) * retain)
+    def evolve(self, ranked, retain_percent, diversity_prob, mutate_prob):
+        retain_length = int(len(ranked) * retain_percent)
         parents = self.survivors_select(ranked=ranked, 
                                         retain_length=retain_length)
         self.promote_diversity(ranked, retain_length, parents, diversity_prob)
@@ -99,8 +99,9 @@ class GeneticOptimizer(object):
         self.crossover(parents, len(self.pop))
         return parents
 
-    def runGA(self, iterations, pop_count, target, best=None, debug=False, retain=0.2,
-              diversity_prob=0.05, mutate_prob=0.01, reverse=False):
+    def runGA(self, iterations, pop_count, target, best=None, debug=False, 
+              retain_percent=0.2, diversity_prob=0.05, mutate_prob=0.01, 
+              reverse=False):
         if not best:
             best = {'fitness': float('-inf' if reverse else 'inf'), 
                     'individual': []}
@@ -128,7 +129,7 @@ class GeneticOptimizer(object):
                 best = dict(ranked[0])
                 #iterations += 3
 
-            self.pop = self.evolve(ranked, retain, diversity_prob,
+            self.pop = self.evolve(ranked, retain_percent, diversity_prob,
                                    mutate_prob)
             #print self.pop
 
