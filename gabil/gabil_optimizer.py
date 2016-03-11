@@ -340,8 +340,8 @@ class GabilOptimizer(GeneticOptimizer):
         acc = 0.0
 
         for i in xrange(iterations):
-            go.load_input("credit-screening/crx.data", training_percent=0.85)
-            acc += go.precision(classifier, go.encoded_test, class_length)
+            self.load_input("credit-screening/crx.data", training_percent=0.85)
+            acc += self.precision(classifier, self.encoded_test, class_length)
 
         return acc / iterations
 
