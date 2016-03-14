@@ -10,6 +10,7 @@ if __package__ is None:
 
 import csv
 import random
+import pdb
 from time import time
 
 # revisar
@@ -160,6 +161,26 @@ class GabilOptimizer(GeneticOptimizer):
         self.test_dataset  = list([line for line in self.examples[train_len:]])
         self.encoded_test = [self.encode(e) for e in self.test_dataset]
         input_file.close()
+
+    def toBooleanRule(self, rule):
+        matrix = [[] for c in self.classes]
+        acc = 0
+
+        for i in xrange(len(self.classes)):
+            for j in xrange(len(self.classes[i])):
+                if rule[acc] == 1:
+                    matrix[i].append('F%d = %s' % (i, str(self.classes[i][j])))
+                acc += 1
+            matrix[i] = ' or '.join(matrix[i])
+        matrix = [i for i in matrix if len(i) > 0]
+        conditions = '(' + ') and ('.join(matrix[:-1])
+        output = matrix[-1]
+        #print matrix
+        #print conditions + ') => ' + output
+        #exit(0)
+        #assert '+' in output or '-' in output
+        return conditions + ') => ' + output
+
 
     @staticmethod
     def new_rule():
@@ -413,11 +434,17 @@ if __name__ == '__main__':
         print "len = %d" % len(solution['individual'])
 
     elif args.action == 'test':
-        go = GabilOptimizer(15)
+        go = GabilOptimizer(args.count_rules)
         go.load_input("credit-screening/crx.data", training_percent=0.85)
         input_file = open(args.input_filename, 'r')
         classifier = cPickle.load(input_file)
         print go.avg_precision(classifier, class_length=2, iterations=100)
+
+    elif args.action == 'humanify':
+        go = GabilOptimizer(args.count_rules)
+        input_file = open(args.input_filename, 'r')
+        classifier = cPickle.load(input_file)
+        print [go.toBooleanRule(rule) for rule in classifier if rule[-1] == 1 or rule[-2] == 1]
 
 # TODO: flatten all rulesets from the beggining and use iterators to 
 # yield lists of 77 characters every time
