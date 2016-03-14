@@ -444,7 +444,10 @@ if __name__ == '__main__':
         go = GabilOptimizer(args.count_rules)
         input_file = open(args.input_filename, 'r')
         classifier = cPickle.load(input_file)
-        print [go.toBooleanRule(rule) for rule in classifier if rule[-1] == 1 or rule[-2] == 1]
+        for rule in classifier:
+            if rule[-1] == 1 or rule[-2] == 1:
+                print go.toBooleanRule(rule) 
+        #print [go.toBooleanRule(rule) for rule in classifier if rule[-1] == 1 or rule[-2] == 1]
 
 # TODO: flatten all rulesets from the beggining and use iterators to 
 # yield lists of 77 characters every time
