@@ -2,6 +2,10 @@ from geneticoptimizer import GeneticOptimizer
 from random import random, randint, shuffle
 from timeit import timeit
 from time import time
+from parents_mixins import ParentsRouletteSelectionMixin, \
+    ParentsRandomSelectionMixin
+from survivors_mixins import SurvivorsTruncatedSelectionMixin, \
+    SurvivorsRouletteSelectionMixin
 
 
 class NqueensOptimizer(GeneticOptimizer):
@@ -43,7 +47,8 @@ class NqueensOptimizer(GeneticOptimizer):
                     pos1 = randint(0, len(solution) - 1)
                     pos2 = randint(0, len(solution) - 1)
 
-                solution[pos1], solution[pos2] = solution[pos2], solution[pos1]
+                solution['individual'][pos1], solution['individual'][pos2] = \
+                    solution['individual'][pos2], solution['individual'][pos1]
 
     def mix(self, parent1, parent2):
         # We take the queens in the first half from parent1, then grab all
@@ -55,5 +60,9 @@ class NqueensOptimizer(GeneticOptimizer):
 
 
 if __name__ == '__main__':
-    no = NqueensOptimizer(30)
-    no.find_optimal(iterations=300, pop_count=100, target=0.0, mutate_prob=0.1)
+    no = NqueensOptimizer(20)
+    no.__class__ = type('Classifier', (ParentsRandomSelectionMixin,
+                                       SurvivorsTruncatedSelectionMixin,
+                                       NqueensOptimizer),
+                        {})
+    no.find_optimal(iterations=300, pop_count=50, target=0.0, mutate_prob=0.2)
