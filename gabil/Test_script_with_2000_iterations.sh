@@ -12,8 +12,8 @@ rules=15
 
 for i in {0..4}
 	do for j in {0..3}
-		do for k in {0..1}
-			do for l in {0..1}
+		do for k in {0..0}
+			do for l in {0..0}
 				do	pypy gabil_optimizer.py 	--action train \
 												--input credit-screening/crx.data \
 												--count_rules $rules \
@@ -23,11 +23,9 @@ for i in {0..4}
 												--retain ${retain[$j]} \
 												--parents ${parent[$k]} \
 												--survivors ${survivor[$l]} \
-												--output $rules-${parentN[$k]}-${survivorN[$l]}-$ite-$pop_count-${mutation[$i]}-${retain[$j]}-$diversity >> Log.txt
+												--output $rules-${parentN[$k]}-${survivorN[$l]}-$ite-$pop_count-${mutation[$i]}-${retain[$j]}-$diversity #>> Log.txt
 					echo "Finished $rules-${parentN[$k]}-${survivorN[$l]}-$ite-$pop_count-${mutation[$i]}-${retain[$j]}-$diversity"
 			done
 		done
 	done
 done
-
-
