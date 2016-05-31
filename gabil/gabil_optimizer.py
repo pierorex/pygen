@@ -3,7 +3,7 @@ if __package__ is None:
     from os import sys, path
     sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
     from geneticoptimizer import GeneticOptimizer
-    from parents_mixins import ParentsRoulletteSelectionMixin,\
+    from parents_mixins import ParentsRouletteSelectionMixin,\
         ParentsRandomSelectionMixin
     from survivors_mixins import SurvivorsRoulletteSelectionMixin,\
         SurvivorsTruncatedSelectionMixin
@@ -230,7 +230,7 @@ class GabilOptimizer(GeneticOptimizer):
         """
         builded = []
         i = 0
-        #print "BUILD: %d" % len(l)
+        # print "BUILD: %d" % len(l)
 
         while i < len(l):
             #print i
@@ -240,10 +240,10 @@ class GabilOptimizer(GeneticOptimizer):
         return builded
 
     def mix(self, parent1, parent2):
-        #print "\nMIX"
+        # print "\nMIX"
         flat1 = self.flatten(parent1)
         flat2 = self.flatten(parent2)
-        #print "len(flat) %d %d " % (len(flat1), len(flat2))
+        # print "len(flat) %d %d " % (len(flat1), len(flat2))
         # calculate swap points for parent1
         pos1, pos2 = 0, 0
 
@@ -257,7 +257,7 @@ class GabilOptimizer(GeneticOptimizer):
         location1 = pos1 % self.rule_length
         location2 = pos2 % self.rule_length
 
-        #print "location %d %d" % (location1, location2)
+        # print "location %d %d" % (location1, location2)
 
         # calculate swap points for parent2 (based on parent1's locations)
         rule1 = random.randint(0, len(parent2)-1)
@@ -276,16 +276,16 @@ class GabilOptimizer(GeneticOptimizer):
 
         if rule1 > rule2:
             rule1, rule2 = rule2, rule1
-        #print "rule %d %d" % (rule1, rule2)
+        # print "rule %d %d" % (rule1, rule2)
         pos3 = (rule1 * self.rule_length) + location1
         pos4 = (rule2 * self.rule_length) + location2
 
-        #print "pos %d %d %d %d" % (pos1, pos2, pos3, pos4)
+        # print "pos %d %d %d %d" % (pos1, pos2, pos3, pos4)
         # create the child by swapping gene segments from parent1
         child = list(flat1)
         child[pos1:pos2+1] = flat2[pos3:pos4+1]
 
-        #print "len(flat) %d %d %d" % (len(flat1), len(flat2), len(child))
+        # print "len(flat) %d %d %d" % (len(flat1), len(flat2), len(child))
         assert len(child) % self.rule_length == 0
         child = self.build(child, self.rule_length)
         if len(child) > 100: return parent1
@@ -302,8 +302,8 @@ class GabilOptimizer(GeneticOptimizer):
         >>> GabilOptimizer(3).matches([0,0,1,1], [0,0,0,0])
         True
         """
-        #print "example\n" + str(example)
-        #print "rule\n" + str(rule)
+        # print "example\n" + str(example)
+        # print "rule\n" + str(rule)
         for i in xrange(len(example)-2):
             if example[i] == 1 and rule[i] == 0:
                 return False
@@ -324,9 +324,13 @@ class GabilOptimizer(GeneticOptimizer):
             return count
 
         correct = count_correct(self.encoded_train, solution)
+        if len(solution) > 30:
+            length_penalty = len(solution) / 1000.0
+        else:
+            length_penalty = 0
+        correct -= length_penalty*correct
         correct_percent_sq = (correct / float(len(self.encoded_train))) ** 2
-        length_penalty = 0  # (float(len(solution)) / 10) * correct_percent_sq
-        return correct_percent_sq - length_penalty
+        return correct_percent_sq
 
     def avg_precision(self, classifier, class_length, iterations):
         """
@@ -376,8 +380,8 @@ if __name__ == '__main__':
                              'unfitted individual')
     parser.add_argument('--retain_percent', action='store', type=float,
                         dest='retain_percent', default=0.2,
-                        help='Probability in [0..1] that a parent will live' +\
-                             ' another generation (inverse of crossover rate)')
+                        help='Probability in [0..1] that a parent will live '+\
+                             'another generation (opposite of crossover rate)')
     parser.add_argument('--parents', action='store', dest='parents',
                         default='roullette',
                         help='Parents selection method: random, roullette')
@@ -406,9 +410,9 @@ if __name__ == '__main__':
         if args.output_filename:
             output_file = open(args.output_filename, 'w')
             cPickle.dump(classifier, output_file)
-        #go.find_optimal(iterations=400, pop_count=20, target=10000.0,
+        # go.find_optimal(iterations=400, pop_count=20, target=10000.0,
         #                mutate_prob=0.1, reverse=True)
-        #print solution[1]
+        # print solution[1]
         print "fitness = %f" % solution['fitness']
         print "len = %d" % len(solution['individual'])
 
