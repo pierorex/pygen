@@ -450,8 +450,9 @@ if __name__ == '__main__':
         classifier = cPickle.load(input_file)
         for rule in classifier:
             if rule[-1] == 1 or rule[-2] == 1:
-                print go.toBooleanRule(rule) 
-        #print [go.toBooleanRule(rule) for rule in classifier if rule[-1] == 1 or rule[-2] == 1]
+                print go.toBooleanRule(rule)
+        # print [go.toBooleanRule(rule)
+        #       for rule in classifier if rule[-1] == 1 or rule[-2] == 1]
 
-# TODO: flatten all rulesets from the beggining and use iterators to 
+# TODO: flatten all rulesets from the beginning and use iterators to
 # yield lists of 77 characters every time

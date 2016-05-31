@@ -40,6 +40,8 @@ class GeneticOptimizer(object):
         self.length = length
         self.min = i_min
         self.max = i_max
+        self.pop = []
+        self.reverse = []
 
     def individual(self):
         return [randint(self.min, self.max) for i in xrange(self.length)]
@@ -49,7 +51,7 @@ class GeneticOptimizer(object):
                 for x in xrange(pop_count)]
 
     def fitness(self, x):
-        #print x
+        # print x
         return abs(self.goal - sum(x))
 
     def rank(self, x):
@@ -109,7 +111,7 @@ class GeneticOptimizer(object):
 
         self.reverse = reverse
         self.pop = self.population(pop_count)
-        compare = (lambda x, y: cmp(x,y) if reverse else -cmp(x,y))
+        compare = (lambda x, y: cmp(x, y) if reverse else -cmp(x, y))
         i = 0
         # if debug:
         #     self.fitness_history = [(self.rank(self.pop), self.pop)]
@@ -151,7 +153,8 @@ class GeneticOptimizer(object):
         repetitions = 0
         best = {'fitness': float('-inf' if reverse else 'inf'), 
                 'individual': []}
-        compare = (lambda x, y: cmp(x,y) if kwargs.get('reverse') else -cmp(x,y))
+        compare = \
+            (lambda x, y: cmp(x, y) if kwargs.get('reverse') else -cmp(x, y))
 
         while True:
             start_time = time()
