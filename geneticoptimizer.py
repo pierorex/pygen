@@ -1,7 +1,7 @@
 from random import randint, random
 from time import time
 from operator import itemgetter
-from parents_mixins import ParentsRandomSelectionMixin, ParentsRoulletteSelectionMixin
+from parents_mixins import ParentsRandomSelectionMixin, ParentsRouletteSelectionMixin
 from survivors_mixins import SurvivorsTruncatedSelectionMixin, SurvivorsRoulletteSelectionMixin
 
 
@@ -179,13 +179,13 @@ class GeneticOptimizer(object):
 
     def precision(self, classifier, dataset, class_length):
         count = 0
-        #print len(dataset), len(dataset[0])
+        # print len(dataset), len(dataset[0])
         for example in dataset:
-            #print example
+            # print example
             prediction = self.predict(classifier, example, class_length)
             if example[len(example) - class_length:] == prediction:
                 count += 1
-        #print count
+        # print count
         return float(count) / len(dataset)
 
     def predict(self, classifier, example, class_length):
@@ -196,7 +196,7 @@ class GeneticOptimizer(object):
 
 if __name__ == '__main__':
     go = GeneticOptimizer(goal=1000, length=5, i_min=10, i_max=1000)
-    go.__class__ = type('Classifier', (ParentsRoulletteSelectionMixin,
+    go.__class__ = type('Classifier', (ParentsRouletteSelectionMixin,
                                        SurvivorsTruncatedSelectionMixin,
                                        GeneticOptimizer),
                         {})
