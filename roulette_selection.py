@@ -1,16 +1,16 @@
 from random import random, randint
 
 
-class RoulletteSelectionMixin(object):
-    def roullette_pick(self, arr):
-        """Returns the index of the parent chosen by the roullette"""
+class RouletteSelectionMixin(object):
+    def roulette_pick(self, arr):
+        """Returns the index of the parent chosen by the roulette"""
         rand = random()
         for i in xrange(len(arr)):
             if rand < arr[i]['prob']:
                 return i
         return randint(0, len(arr)-1)
 
-    def calculate_probs_roullette(self, arr):
+    def calculate_probs_roulette(self, arr):
         total_fitness = 0.0
         best_fitness = arr[0]['fitness']
 

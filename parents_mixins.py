@@ -1,12 +1,12 @@
 from random import randint
-from roullette_selection import RoulletteSelectionMixin
+from roulette_selection import RouletteSelectionMixin
 
 
-class ParentsRouletteSelectionMixin(RoulletteSelectionMixin):
+class ParentsRouletteSelectionMixin(RouletteSelectionMixin):
     def parents_select(self, parents):
-        self.calculate_probs_roullette(parents)
+        self.calculate_probs_roulette(parents)
         # roulette-pick two parents and return them both
-        return self.roullette_pick(parents), self.roullette_pick(parents)
+        return self.roulette_pick(parents), self.roulette_pick(parents)
 
 
 class ParentsRandomSelectionMixin(object):

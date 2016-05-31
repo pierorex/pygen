@@ -1,4 +1,4 @@
-from roullette_selection import RoulletteSelectionMixin
+from roulette_selection import RouletteSelectionMixin
 
 
 class SurvivorsTruncatedSelectionMixin(object):
@@ -6,14 +6,14 @@ class SurvivorsTruncatedSelectionMixin(object):
         return ranked[:retain_length]
 
 
-class SurvivorsRoulletteSelectionMixin(RoulletteSelectionMixin):
+class SurvivorsRouletteSelectionMixin(RouletteSelectionMixin):
     def survivors_select(self, ranked, retain_length):
-        self.calculate_probs_roullette(ranked)
-        # roullette-pick 'retain_length' survivors
+        self.calculate_probs_roulette(ranked)
+        # roulette-pick 'retain_length' survivors
         survivors = []
 
         while len(survivors) < retain_length:
-            chosen = ranked[self.roullette_pick(ranked)]
+            chosen = ranked[self.roulette_pick(ranked)]
             survivors.append(chosen)
             ranked.remove(chosen)
         return survivors

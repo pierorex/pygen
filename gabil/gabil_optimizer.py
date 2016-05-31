@@ -5,7 +5,7 @@ if __package__ is None:
     from geneticoptimizer import GeneticOptimizer
     from parents_mixins import ParentsRouletteSelectionMixin,\
         ParentsRandomSelectionMixin
-    from survivors_mixins import SurvivorsRoulletteSelectionMixin,\
+    from survivors_mixins import SurvivorsRouletteSelectionMixin,\
         SurvivorsTruncatedSelectionMixin
 
 import csv

@@ -1,8 +1,9 @@
 from random import randint, random
 from time import time
 from operator import itemgetter
-from parents_mixins import ParentsRandomSelectionMixin, ParentsRouletteSelectionMixin
-from survivors_mixins import SurvivorsTruncatedSelectionMixin, SurvivorsRoulletteSelectionMixin
+from parents_mixins import ParentsRandomSelectionMixin, \
+    ParentsRouletteSelectionMixin
+from survivors_mixins import SurvivorsTruncatedSelectionMixin, SurvivorsRouletteSelectionMixin
 
 
 class GeneticOptimizer(object):
@@ -127,11 +128,11 @@ class GeneticOptimizer(object):
             if compare(ranked[0]['fitness'], best['fitness']) > 0:
                 print ranked[0]['fitness'], best['fitness']
                 best = dict(ranked[0])
-                #iterations += 3
+                # iterations += 3
 
             self.pop = self.evolve(ranked, retain_percent, diversity_prob,
                                    mutate_prob)
-            #print self.pop
+            # print self.pop
 
         # we missed the target, let's analyze how we scored
         ranked = sorted([{'fitness': self.fitness(x['individual']), 'individual': x['individual']} 
